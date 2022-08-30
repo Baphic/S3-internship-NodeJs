@@ -1,0 +1,25 @@
+{
+  "name": "proyecto_1",
+  "version": "1.0.0",
+  "description": "Proyecto NO.1 de Practicas BackEnd",
+  "main": "index",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon index.js"
+  },
+  "author": "Omar Salazar",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "^2.1206.0",
+    "bcrypt-nodejs": "^0.0.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.2",
+    "express": "^4.18.1",
+    "jwt-simple": "^0.5.6",
+    "moment": "^2.29.1",
+    "mongoose": "^6.2.9",
+    "nodemon": "^2.0.15",
+    "save": "^2.5.0",
+    "uuid": "^8.3.2"
+  }
+}
