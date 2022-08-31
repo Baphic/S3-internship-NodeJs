@@ -28,7 +28,11 @@ const elimarData = (req, res) =>{
         if(err) return res.send({err});
 
         res.send("Documento Eliminado")
-    }) 
+    })
+} 
+
+function uploadData(req, res){
+    res.send('Archivo subido exitosamente: ' + req.file.location)
 }
 
 
@@ -36,5 +40,6 @@ const elimarData = (req, res) =>{
 module.exports = {
     listData,
     descargarData,
-    elimarData
+    elimarData,
+    uploadData
 }
