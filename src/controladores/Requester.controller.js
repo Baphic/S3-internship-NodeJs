@@ -11,9 +11,13 @@ function listData(req, res) {
 }
 
 
+function uploadData(req, res){
+    res.send('Archivo subido exitosamente: ' + req.file.location)
+}
 
 
 
 module.exports = {
-    listData
+    listData,
+    uploadData
 }
