@@ -1,43 +1,38 @@
+
 const express = require('express');
 const requester = require('../controladores/Requester.controller');
 const admin = require('../controladores/Admin.controller');
+const multer = require("multer")
+
 
 var api = express.Router();
 
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-
-const aws = require('aws-sdk')
-const multer = require('multer')
-const multerS3 = require('multer-s3');
-
-const BUCKET = process.env.BUCKET
-const s3 = new aws.S3();
+const storage = multer.memoryStorage();
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype.split("/")[0] === "image") {
+    cb(null, true);
+  } else {
+    cb(new multer.MulterError("LIMIT_UNEXPECTED_FILE"), false);
+  }
+};
 
 const upload = multer({
-    storage: multerS3({
-        s3: s3,
-        acl: "public-read",
-        bucket: BUCKET,
-        key: function (req, file, cb) {
-            console.log(file);
-            cb(null, file.originalname)
-        }
-    })
-})
+    storage,
+    fileFilter,
+    limits: { fileSize: 1000000000, files: 20},
+  });
 
-api.get('/listDataBucket', requester.listData);
-api.get('/downloadData/:fileName', requester.descargarData);
-api.delete('/elimarData/:fileName', requester.elimarData);
-api.post('/uploadDataBucket', upload.single('file'), requester.uploadData);
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+api.get("/listDataBucket", requester.listData);
+api.get("/downloadData/:fileName", requester.descargarData);
+api.delete("/elimarData/:fileName", requester.elimarData);
+api.post('/uploadDataBucket', upload.array('file'), requester.uploadData);
 
 api.post('/login', admin.Login);
 api.post('/registro', admin.Register);
 api.put('/newAdmin/:idReq', admin.addAdmin);
 api.put('/oldRequester/:idAdm', admin.removeAdmin);
-
-api.get('/downloadData/:fileName', requester.descargarData);
-api.delete('/elimarData/:fileName', requester.elimarData);
-api.post('/uploadDataBucket', upload.single('file'), requester.uploadData);
 
 module.exports = api;
