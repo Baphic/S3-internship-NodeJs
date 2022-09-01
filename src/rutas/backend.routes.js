@@ -27,6 +27,8 @@ const upload = multer({
 })
 
 api.get('/listDataBucket', requester.listData);
+api.get('/listFoldersBucket', requester.listCarpetas);
+api.post('/addFolder', requester.addCarpeta);
 
 api.post('/login', admin.Login);
 api.post('/registro', admin.Register);
