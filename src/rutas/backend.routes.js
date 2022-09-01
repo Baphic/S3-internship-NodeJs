@@ -2,7 +2,8 @@
 const express = require('express');
 const requester = require('../controladores/Requester.controller');
 const admin = require('../controladores/Admin.controller');
-const multer = require("multer")
+const multer = require("multer");
+const aut = require('../middlewares/autentificacion');
 
 
 var api = express.Router();
@@ -28,7 +29,7 @@ const upload = multer({
 api.get("/listDataBucket", requester.listData);
 api.get("/downloadData/:fileName", requester.descargarData);
 api.delete("/elimarData/:fileName", requester.elimarData);
-api.post('/uploadDataBucket', upload.array('file'), requester.uploadData);
+api.post('/uploadDataBucket', upload.array('file'),aut.Auth, requester.uploadData);
 
 api.post('/login', admin.Login);
 api.post('/registro', admin.Register);

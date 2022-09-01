@@ -16,12 +16,19 @@ const express = require("express");
 const multer = require("multer");
 const uuid = require("uuid").v4;
 
-const s3Upload = async (files) => {
+const s3Upload = async (files,user) => {
   const s3 = new S3();
 
   const params = files.map((file) => {
+    console.log(user)
+    let bucket;
+    if(user.rol=='Requester'){
+      bucket = process.env.BUCKET_REQUESTER;
+    } else if( user.rol=='Admin'){
+      bucket = process.env.BUCKET;
+    }
     return {
-      Bucket: process.env.BUCKET,
+      Bucket: bucket,
       Key: `${uuid()}-${file.originalname}`,
       Body: file.buffer,
     };
@@ -75,7 +82,8 @@ const elimarData = (req, res) => {
 //Agregar
 const uploadData = async (req, res) => {
   try {
-    const results = await s3Upload(req.files);
+    console.log(req.user)
+    const results = await s3Upload(req.files,req.user);
     return res.json({ status: "success" });
   } catch (err) {
     console.log(err)

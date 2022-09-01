@@ -30,8 +30,7 @@ function Admin(res) {
 function Login(req, res) {
     var parametros = req.body;
 
-    if ((parametros.usuario || parametros.email) && parametros.password)
-
+    if ((parametros.usuario || parametros.email) && parametros.password){
         if (parametros.usuario) {
             Usuario.findOne({ usuario: parametros.usuario }, (error, usuarioEncontrado) => {
                 if (error) return res.status(500).send({ mensaje: "Error en la petición1" });
@@ -78,6 +77,7 @@ function Login(req, res) {
                 }
             })
         }
+    }
 }
 
 function Register(req, res) {
