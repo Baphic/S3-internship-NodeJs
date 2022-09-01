@@ -1,5 +1,6 @@
 const express = require('express');
 const requester = require('../controladores/Requester.controller');
+const admin = require('../controladores/Admin.controller');
 
 var api = express.Router();
 
@@ -26,6 +27,15 @@ const upload = multer({
 })
 
 api.get('/listDataBucket', requester.listData);
+api.get('/downloadData/:fileName', requester.descargarData);
+api.delete('/elimarData/:fileName', requester.elimarData);
+api.post('/uploadDataBucket', upload.single('file'), requester.uploadData);
+
+api.post('/login', admin.Login);
+api.post('/registro', admin.Register);
+api.put('/newAdmin/:idReq', admin.addAdmin);
+api.put('/oldRequester/:idAdm', admin.removeAdmin);
+
 api.get('/downloadData/:fileName', requester.descargarData);
 api.delete('/elimarData/:fileName', requester.elimarData);
 api.post('/uploadDataBucket', upload.single('file'), requester.uploadData);
