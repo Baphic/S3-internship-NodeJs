@@ -39,8 +39,26 @@ function listData(req, res) {
   temporal.listObjectsV2({ Bucket: process.env.BUCKET }, (error, archivos) => {
     if (error) return res.send({ error: error });
 
+
     return res.send({ Data: archivos });
   });
+}
+
+function addCarpeta(req, res) {
+    const buck = req.body.bucket;
+    const name = req.body.name + "/";
+    var Objeto = { Bucket: buck, Key: name };
+
+    temporal.putObject(Objeto, (error, fol) => {
+        if (error) return res.send({ error: error })
+        return res.send({ Folder: fol })
+    })
+}
+
+function listCarpetas(req, res) {
+    const buck = req.body.bucket;
+
+
 }
 
 ////////////////////////////////////////////////
@@ -67,6 +85,7 @@ const elimarData = (req, res) => {
     (err, file) => {
       if (err) return res.send({ err });
 
+
       res.send("Documento Eliminado");
     }
   );
@@ -87,4 +106,6 @@ module.exports = {
   descargarData,
   elimarData,
   uploadData,
+  listCarpetas,
+  addCarpeta
 };

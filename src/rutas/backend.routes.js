@@ -29,7 +29,8 @@ api.get("/listDataBucket", requester.listData);
 api.get("/downloadData/:fileName", requester.descargarData);
 api.delete("/elimarData/:fileName", requester.elimarData);
 api.post('/uploadDataBucket', upload.array('file'), requester.uploadData);
-
+api.get('/listFoldersBucket', requester.listCarpetas);
+api.post('/addFolder', requester.addCarpeta);
 api.post('/login', admin.Login);
 api.post('/registro', admin.Register);
 api.put('/newAdmin/:idReq', admin.addAdmin);
