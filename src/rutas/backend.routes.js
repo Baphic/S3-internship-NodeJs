@@ -18,20 +18,21 @@ const fileFilter = (req, file, cb) => {
 };
 
 const upload = multer({
-    storage,
-    fileFilter,
-    limits: { fileSize: 1000000000, files: 20},
-  });
+  storage,
+  fileFilter,
+  limits: { fileSize: 1000000000, files: 20 },
+});
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
 api.get("/listDataBucket", requester.listData);
+
 api.get("/downloadData/:fileName", requester.descargarData);
 api.delete("/elimarData/:fileName", requester.elimarData);
-api.get('/listFoldersBucket', requester.listCarpetas);
+//api.get('/listFoldersBucket', requester.listCarpetas);
 api.post('/addFolder', requester.addCarpeta);
-api.post('/uploadDataBucket', upload.array('file'),aut.Auth, requester.uploadData);
+api.post('/uploadDataBucket', upload.array('file'), aut.Auth, requester.uploadData);
 
 api.post('/login', admin.Login);
 api.post('/registro', admin.Register);
