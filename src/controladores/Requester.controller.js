@@ -20,11 +20,13 @@ const express = require("express");
 const multer = require("multer");
 const uuid = require("uuid").v4;
 
-const s3Upload = async (files, user) => {
+const s3Upload = async (files, user, des) => {
   const s3 = new S3();
 
   const params = files.map((file) => {
-    console.log(user)
+    //console.log(user)
+    //console.log("logeado")
+
     let bucket;
     if (user.rol == 'Requester') {
       bucket = process.env.BUCKET_REQUESTER;
@@ -32,10 +34,11 @@ const s3Upload = async (files, user) => {
       bucket = process.env.BUCKET;
     }
 
+    let descripcion = des;
     let _id = (uuid() + file.originalname);
     let name = file.originalname;
 
-    historial(name, _id);
+    historial(name, _id, user.usuario, descripcion);
 
     return {
       Bucket: bucket,
@@ -61,9 +64,16 @@ function listData(req, res) {
 
 // actualizar historial
 
-function historial(name, uuid, res) {
+function historial(name, uuid, user, descripcion, res) {
+  var hoy = new Date();
+  var uaio = user;
   var newRegistro = new Historial();
 
+  console.log(uaio + "USUARIO")
+  console.log(descripcion + "DESCRIP")
+  newRegistro.usuario = uaio;
+  newRegistro.fecha = hoy;
+  newRegistro.descripcion = descripcion;
   newRegistro.nombre = name;
   newRegistro.UUID = uuid;
 
@@ -125,9 +135,8 @@ const elimarData = (req, res) => {
 const uploadData = async (req, res) => {
   try {
     console.log(req.user)
-    const results = await s3Upload(req.files, req.user);
-
-
+    console.log(req.body.descrip)
+    const results = await s3Upload(req.files, req.user, req.body.descrip);
 
     return res.json({ status: "success" });
   } catch (err) {
