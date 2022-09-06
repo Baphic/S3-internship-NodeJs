@@ -2,7 +2,7 @@ require("dotenv").config();
 const Amazon = require("aws-sdk");
 const { S3 } = require("aws-sdk");
 
-const Historial = require("../modelos/registros.model");
+const Historial = require("../modelos/solicitudes.model");
 
 Amazon.config.update({
   accessKeyId: process.env.ACCESS,
@@ -20,6 +20,7 @@ const express = require("express");
 const multer = require("multer");
 const uuid = require("uuid").v4;
 
+
 const s3Upload = async (files, user, des) => {
   const s3 = new S3();
 
@@ -34,15 +35,17 @@ const s3Upload = async (files, user, des) => {
       bucket = process.env.BUCKET;
     }
 
+    const K = `${uuid()}-${file.originalname}`
+
     let descripcion = des;
-    let _id = (uuid() + file.originalname);
+    let _id = K;
     let name = file.originalname;
 
     historial(name, _id, user.usuario, descripcion);
 
     return {
       Bucket: bucket,
-      Key: `${uuid()}-${file.originalname}`,
+      Key: K,
       Body: file.buffer,
     };
   });
@@ -63,19 +66,20 @@ function listData(req, res) {
 }
 
 // actualizar historial
-
 function historial(name, uuid, user, descripcion, res) {
   var hoy = new Date();
   var uaio = user;
   var newRegistro = new Historial();
-
+  /*
   console.log(uaio + "USUARIO")
   console.log(descripcion + "DESCRIP")
+  */
   newRegistro.usuario = uaio;
   newRegistro.fecha = hoy;
   newRegistro.descripcion = descripcion;
   newRegistro.nombre = name;
   newRegistro.UUID = uuid;
+  newRegistro.estado = "Pendiente";
 
   console.log(newRegistro.UUID)
   newRegistro.save((error, registroGuardado) => {
@@ -133,10 +137,12 @@ const elimarData = (req, res) => {
 
 //Agregar
 const uploadData = async (req, res) => {
+  let des = req.body.descrip
   try {
     console.log(req.user)
-    console.log(req.body.descrip)
-    const results = await s3Upload(req.files, req.user, req.body.descrip);
+    console.log(des)
+
+    const results = await s3Upload(req.files, req.user, des);
 
     return res.json({ status: "success" });
   } catch (err) {

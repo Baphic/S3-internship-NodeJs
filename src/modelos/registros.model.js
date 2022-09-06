@@ -2,11 +2,10 @@ const mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 var RegistroSchema = Schema({
-    usuario: String,
+    Admin: String,
     fecha: Date,
-    descripcion: String,
-    nombre: String,
+    accion: String,
     UUID: String
 });
-module.exports = mongoose.model('historial', RegistroSchema);
+module.exports = mongoose.model('historialRecords', RegistroSchema);
 

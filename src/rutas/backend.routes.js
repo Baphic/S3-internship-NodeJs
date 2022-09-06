@@ -36,7 +36,15 @@ api.post('/uploadDataBucket', upload.array('file'), aut.Auth, requester.uploadDa
 
 api.post('/login', admin.Login);
 api.post('/registro', admin.Register);
+
 api.put('/newAdmin/:idReq', admin.addAdmin);
 api.put('/oldRequester/:idAdm', admin.removeAdmin);
+
+api.put('/approveRequest/:idSo', aut.Auth, admin.aprobarSolicitud);
+api.put('/denyRequest/:idSo', aut.Auth, admin.negarSolicitud);
+
+api.post('/reupload', admin.reuploadPrincipal)
+
+api.get('/historial', admin.historial)
 
 module.exports = api;
