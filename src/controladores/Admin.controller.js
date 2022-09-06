@@ -44,7 +44,7 @@ function Login(req, res) {
                         if (verificacionPassword) {
 
                             if (parametros.Token === "true") {
-                                return res.status(200).send({ token: jwt.crearToken(usuarioEncontrado) })
+                                return res.status(200).send({ token: jwt.crearToken(usuarioEncontrado),usuarioEncontrado })
                             }
                         } else {
                             usuarioEncontrado.password = undefined;
