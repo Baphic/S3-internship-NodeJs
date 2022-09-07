@@ -2,7 +2,7 @@ require("dotenv").config();
 const Amazon = require("aws-sdk");
 const { S3 } = require("aws-sdk");
 
-const Historial = require("../modelos/solicitudes.model");
+const Solicitud = require("../modelos/solicitudes.model");
 
 Amazon.config.update({
   accessKeyId: process.env.ACCESS,
@@ -20,7 +20,23 @@ const express = require("express");
 const multer = require("multer");
 const uuid = require("uuid").v4;
 
+// Agregar Datos a S3
+const uploadData = async (req, res) => {
+  let des = req.body.descrip
+  try {
+    console.log(req.user)
+    console.log(des)
 
+    const results = await s3Upload(req.files, req.user, des);
+
+    return res.json({ status: "success" });
+  } catch (err) {
+    console.log(err)
+  }
+};
+
+
+// Subir datos al bucket temporal
 const s3Upload = async (files, user, des) => {
   const s3 = new S3();
 
@@ -35,13 +51,13 @@ const s3Upload = async (files, user, des) => {
       bucket = process.env.BUCKET;
     }
 
-    const K = `${uuid()}-${file.originalname}`
+    const K = `${uuid()}`
 
-    let descripcion = des;
+    let razon = des;
     let _id = K;
     let name = file.originalname;
 
-    historial(name, _id, user.usuario, descripcion);
+    solicitud(user.usuario, razon, name, _id);
 
     return {
       Bucket: bucket,
@@ -57,7 +73,65 @@ const s3Upload = async (files, user, des) => {
   }
 };
 
-// listar
+
+// Solicitud para subir los datos al directorio correspondiente
+function solicitud(user, uuid, name, descripcion, res) {
+  var hoy = new Date();
+  var solicitud = new Solicitud();
+
+  solicitud.usuario = user;
+  solicitud.fecha = hoy;
+  solicitud.descripcion = descripcion;
+  solicitud.nombre = name;
+  solicitud.UUID = uuid;
+  solicitud.estado = "Pendiente";
+
+  solicitud.save((error, solicitudGuardada) => {
+    if (error) return res.status(500).send({ mensaje: "Error de la petición" });
+    if (!solicitudGuardada) return res.status(500).send({ mensaje: "Error, no se puedo hacer la solicitud para subir los archivos." });
+  });
+}
+
+
+// Actualizar el historial (Pendiente)
+function historial(user, razon, name, uuid, res) {
+  var hoy = new Date();
+  var uaio = user;
+  var newRegistro = new Solicitud();
+  /*
+  console.log(uaio + "USUARIO")
+  console.log(descripcion + "DESCRIP")
+  */
+  newRegistro.usuario = uaio;
+  newRegistro.fecha = hoy;
+  newRegistro.descripcion = razon;
+  newRegistro.nombre = name;
+  newRegistro.UUID = uuid;
+  newRegistro.estado = "Pendiente";
+
+  console.log(newRegistro.UUID)
+  newRegistro.save((error, registroGuardado) => {
+    if (error) return res.status(500).send({ mensaje: "Error de la petición" });
+    if (!registroGuardado) return res.status(500).send({ mensaje: "Error, no se agrego el registro" });
+
+  });
+}
+
+
+// Agregar una carpeta
+function addCarpeta(req, res) {
+  const buck = req.body.bucket;
+  const name = req.body.name + "/";
+  var Objeto = { Bucket: buck, Key: name };
+
+  temporal.putObject(Objeto, (error, fol) => {
+    if (error) return res.send({ error: error })
+    return res.send({ Folder: fol })
+  })
+}
+
+
+// Listar Datos
 function listData(req, res) {
 
   const min = req.user;
@@ -71,50 +145,8 @@ function listData(req, res) {
   });
 }
 
-// actualizar historial
-function historial(name, uuid, user, descripcion, res) {
-  var hoy = new Date();
-  var uaio = user;
-  var newRegistro = new Historial();
-  /*
-  console.log(uaio + "USUARIO")
-  console.log(descripcion + "DESCRIP")
-  */
-  newRegistro.usuario = uaio;
-  newRegistro.fecha = hoy;
-  newRegistro.descripcion = descripcion;
-  newRegistro.nombre = name;
-  newRegistro.UUID = uuid;
-  newRegistro.estado = "Pendiente";
 
-  console.log(newRegistro.UUID)
-  newRegistro.save((error, registroGuardado) => {
-    if (error) return res.status(500).send({ mensaje: "Error de la petición" });
-    if (!registroGuardado) return res.status(500).send({ mensaje: "Error, no se agrego el registro" });
-
-  });
-}
-
-// agregar carpeta
-function addCarpeta(req, res) {
-  const buck = req.body.bucket;
-  const name = req.body.name + "/";
-  var Objeto = { Bucket: buck, Key: name };
-
-  temporal.putObject(Objeto, (error, fol) => {
-    if (error) return res.send({ error: error })
-    return res.send({ Folder: fol })
-  })
-}
-
-/*function listCarpetas(req, res) {
-  const buck = req.body.bucket;
-}*/
-
-////////////////////////////////////////////////
-
-
-//Descargar
+// Descargar Datos
 const descargarData = (req, res) => {
   const fileName = req.params.fileName;
   temporal.getObject(
@@ -127,7 +159,8 @@ const descargarData = (req, res) => {
   );
 };
 
-//Eliminar
+
+//Eliminar Datos
 const elimarData = (req, res) => {
   const fileName = req.params.fileName;
   temporal.deleteObject(
@@ -141,20 +174,6 @@ const elimarData = (req, res) => {
   );
 };
 
-//Agregar
-const uploadData = async (req, res) => {
-  let des = req.body.descrip
-  try {
-    console.log(req.user)
-    console.log(des)
-
-    const results = await s3Upload(req.files, req.user, des);
-
-    return res.json({ status: "success" });
-  } catch (err) {
-    console.log(err)
-  }
-};
 
 module.exports = {
   listData,
@@ -162,6 +181,5 @@ module.exports = {
   descargarData,
   elimarData,
   uploadData,
-  //listCarpetas,
   addCarpeta
 };

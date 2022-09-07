@@ -1,12 +1,12 @@
 const Usuario = require('../modelos/usuarios.model');
 const Registros = require("../modelos/registros.model");
 const Solicitudes = require("../modelos/solicitudes.model");
-
 const bcrypt = require('bcrypt-nodejs');
 const jwt = require('../servicios/jwt.tokens');
 const fs = require('fs')
 const uuid = require("uuid").v4;
 
+// Creacion de Admin default
 function Admin(res) {
     var adminModelo = new Usuario();
     adminModelo.nombre = "Back";
@@ -30,6 +30,7 @@ function Admin(res) {
     });
 }
 
+// Login para los administradores y requesters
 function Login(req, res) {
     var parametros = req.body;
 
@@ -83,6 +84,7 @@ function Login(req, res) {
     }
 }
 
+// Registro requesters
 function Register(req, res) {
     var parametros = req.body;
     var usuarioModelo = new Usuario();
@@ -124,7 +126,7 @@ function Register(req, res) {
     }
 }
 
-
+// Agregar nuevo administrador
 function addAdmin(req, res) {
     var idReq = req.params.idReq;
     const role = "Admin";
@@ -143,6 +145,7 @@ function addAdmin(req, res) {
     })
 }
 
+// Cambiar rol
 function removeAdmin(req, res) {
     var idAdm = req.params.idAdm;
     const role = "Requester";

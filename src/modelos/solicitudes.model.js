@@ -9,5 +9,4 @@ var SolicitudSchema = Schema({
     UUID: String,
     estado: String
 });
-module.exports = mongoose.model('historialRequests', SolicitudSchema);
-
+module.exports = mongoose.model('solicitudes', SolicitudSchema);
