@@ -59,6 +59,12 @@ const s3Upload = async (files, user, des) => {
 
 // listar
 function listData(req, res) {
+
+  const min = req.user;
+
+  if (min.rol != "Requester")
+  return res.status(500).send({mensaje:'Solo el requester puede listar los directorios'})
+
   temporal.listObjectsV2({ Bucket: process.env.BUCKET }, (error, archivos) => {
     if (error) return res.send({ error: error });
     return res.send({ Data: archivos });

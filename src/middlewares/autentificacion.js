@@ -4,7 +4,7 @@ const secret = 'clave_'
 
 exports.Auth = function(req, res, next) {
     if( !req.headers.authorization ){
-        return res.status(404).send({ mensaje: "No se encontro la cabecera Autentificacion" });
+        return res.status(404).send({ mensaje: "No se encontró la cabecera Autentificacion" });
     }
 
     var token = req.headers.authorization.replace(/['"]+/g, '');
@@ -15,7 +15,7 @@ exports.Auth = function(req, res, next) {
             return res.status(404).send({ mensaje: "El token ya ha expirado" })
         }
     } catch (error) {
-        return res.status(500).send({ mensaje: "El token no es valido"})
+        return res.status(500).send({ mensaje: "El token no es válido"})
     }
 
     req.user = payload;

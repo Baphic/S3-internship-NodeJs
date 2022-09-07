@@ -23,7 +23,7 @@ function Admin(res) {
 
                 adminModelo.save((error, adminSave) => {
                     if (error) return res.status(500).send({ mensaje: "Error de la petición3" });
-                    if (!adminSave) return res.status(500).send({ mensaje: "Error, no se creo ningun Admin" });
+                    if (!adminSave) return res.status(500).send({ mensaje: "Error, no se creó ningún Admin" });
 
                 });
             });
@@ -148,7 +148,7 @@ function removeAdmin(req, res) {
     const role = "Requester";
 
     Usuario.findById(idAdm, (error, profeEn) => {
-        if (error) res.status(500).send({ error: "error en la petición" });
+        if (error) res.status(500).send({ error: "Error en la petición" });
         if (!profeEn) res.status(500).send({ error: "No existe este Admin" });
 
         Usuario.findByIdAndUpdate(idAdm, { rol: role }, { new: true }, (error, admUpd) => {
@@ -226,7 +226,7 @@ function reuploadPrincipalGet(UUID, res) {
         //console.log(object);
 
         fs.writeFile('temp/' + path, object.Body, 'binary', (err) => {
-            if (err) res.status(500).send({ error: "error en la petición2" });
+            if (err) res.status(500).send({ error: "Error en la petición2" });
 
             reuploadPrincipal(path);
         })
@@ -246,7 +246,7 @@ function reuploadPrincipal(path, res) {
         //console.log(data);
 
         sThree.putObject(params, (error, dataUpload) => {
-            if (error) res.status(500).send({ error: "error en la petición3" });
+            if (error) res.status(500).send({ error: "Error en la petición3" });
             if (!dataUpload) res.status(500).send({ error: "No se subio nada" })
 
             reuploadPrincipalDelete(path)
@@ -270,7 +270,7 @@ function reuploadPrincipalDelete(path, res) {
         }
 
         sThree.deleteObject(params, (error, dataDelete) => {
-            if (error) res.status(500).send({ error: "error en la petición3" });
+            if (error) res.status(500).send({ error: "Error en la petición3" });
             if (!dataDelete) res.status(500).send({ error: "No se subio nada" })
 
             return ({ conclusion: "funciona" });
@@ -288,7 +288,7 @@ function negarSolicitud(req, res) {
     if (min.rol == "Admin") {
 
         Solicitudes.findById(idSo, (error, SolEn) => {
-            if (error) res.status(500).send({ error: "error en la petición2" });
+            if (error) res.status(500).send({ error: "Error en la petición2" });
             if (!SolEn) res.status(500).send({ error: "No existe esta Solicitud" })
 
             const status = "Denegado";
