@@ -134,17 +134,60 @@ function addCarpeta(req, res) {
 // Listar Datos
 function listData(req, res) {
 
-  const min = req.user;
+  // const min = req.user;
 
-  if (min.rol != "Requester")
-  return res.status(500).send({mensaje:'Solo el requester puede listar los directorios'})
+  // if (min.rol != "")
+  // return res.status(500).send({mensaje:'Solo el requester puede listar los directorios'})
 
-  temporal.listObjectsV2({ Bucket: process.env.BUCKET }, (error, archivos) => {
+  const paramss3 = {
+    Bucket: process.env.BUCKET,
+    Delimiter: '/'
+  }
+
+  temporal.listObjectsV2(paramss3, (error, archivos) => {
     if (error) return res.send({ error: error });
-    return res.send({ Data: archivos });
+    return res.send({ Data: archivos.CommonPrefixes });
   });
 }
 
+const listDataTermporal = (req,res)=>{
+
+  const paramss3 = {
+    Bucket: process.env.BUCKET_REQUESTER,
+    Delimiter: '/'
+  }
+
+  temporal.listObjectsV2(paramss3,(error,archivos)=>{
+    if(error) return res.send({error:error});
+    return res.send({Data:archivos.CommonPrefixes});
+  })
+}
+
+const listDataDirectorio = (req,res)=>{
+  let parametros = req.body;
+  const paramss3 = {
+    Bucket: process.env.BUCKET,
+    Delimiter: '.jpg',
+    StartAfter: parametros.directorio,
+  }
+  temporal.listObjectsV2(paramss3,(error,archivos)=>{
+    if(error) return res.send({error:error});
+    return res.send({Data:archivos.Contents});
+  })
+}
+
+const listDataDirectorioTemporal = (req,res)=>{
+  let parametros = req.body;
+  console.log(parametros.directorio)
+  const paramss3 = {
+    Bucket: process.env.BUCKET_REQUESTER,
+    StartAfter: parametros.directorio,
+  }
+  temporal.listObjectsV2(paramss3,(error,archivos)=>{
+    if(error) return res.send({error:error});
+    return res.send({Data:archivos.Contents});
+  })
+}
 
 // Descargar Datos
 const descargarData = (req, res) => {
@@ -181,5 +224,8 @@ module.exports = {
   descargarData,
   elimarData,
   uploadData,
-  addCarpeta
+  addCarpeta,
+  listDataTermporal,
+  listDataDirectorio,
+  listDataDirectorioTemporal
 };

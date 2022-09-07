@@ -32,7 +32,10 @@ api.post('/registro', admin.Register);
 
 
 // Opciones del Requester
-api.get("/listDataBucket", aut.Auth, requester.listData);
+api.get("/listDataBucket",  requester.listData);
+api.get("/listDataBucketTemporal",  requester.listDataTermporal);
+api.get("/listDataDirectorioBucket",  requester.listDataDirectorio);
+api.get("/listDataDirectorioBucketTemporal",  requester.listDataDirectorioTemporal);
 api.post('/uploadDataBucket', upload.array('file'), aut.Auth, requester.uploadData);
 
 
