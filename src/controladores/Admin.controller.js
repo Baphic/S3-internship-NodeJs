@@ -124,47 +124,58 @@ function Register(req, res) {
     }
 }
 
-
 function addAdmin(req, res) {
     var idReq = req.params.idReq;
     const role = "Admin";
+    var ring = req.user.rol
 
-    Usuario.findById(idReq, (error, reqEnc) => {
-        if (error) res.status(500).send({ error: "error en la petición1" });
-        if (!reqEnc) res.status(500).send({ error: "No existe este Requester" })
+    if (ring == "Admin") {
 
-        Usuario.findByIdAndUpdate(idReq, { rol: role }, { new: true }, (error, reqUpd) => {
-            if (error) return res.status(500).send({ mesaje: "Error de la petición2" });
-            if (!reqUpd) return res.status(500).send({ mensaje: "Error al registrar" });
+        Usuario.findById(idReq, (error, reqEnc) => {
+            if (error) res.status(500).send({ error: "error en la petición1" });
+            if (!reqEnc) res.status(500).send({ error: "No existe este Requester" })
 
-            return res.status(200).send({ Admin: reqUpd });
+            if (reqEnc.rol == "Admin") return res.status(500).send({ requester: "Este usuario ya es rol Admin" });
+
+            Usuario.findByIdAndUpdate(idReq, { rol: role }, { new: true }, (error, reqUpd) => {
+                if (error) return res.status(500).send({ mesaje: "Error de la petición2" });
+                if (!reqUpd) return res.status(500).send({ mensaje: "Error al registrar" });
+
+                return res.status(200).send({ Admin: reqUpd });
+            })
         })
-
-    })
+    } else {
+        return res.status(500).send({ ERROR: "Acceso solo para Admins" });
+    }
 }
 
 function removeAdmin(req, res) {
     var idAdm = req.params.idAdm;
     const role = "Requester";
+    var run = req.user.rol
 
-    Usuario.findById(idAdm, (error, profeEn) => {
-        if (error) res.status(500).send({ error: "error en la petición" });
-        if (!profeEn) res.status(500).send({ error: "No existe este Admin" });
+    if (run == "Admin") {
 
-        Usuario.findByIdAndUpdate(idAdm, { rol: role }, { new: true }, (error, admUpd) => {
-            if (error) return res.status(500).send({ mesaje: "Error de la petición2" });
-            if (!admUpd) return res.status(500).send({ mensaje: "Error al degradar" });
+        Usuario.findById(idAdm, (error, uEn) => {
+            if (error) res.status(500).send({ error: "error en la petición" });
+            if (!uEn) res.status(500).send({ error: "No existe este Admin" });
 
-            return res.status(200).send({ requester: admUpd });
+            if (uEn.rol == "Requester") return res.status(500).send({ requester: "Este usuario ya es rol Requester" });
+
+            Usuario.findByIdAndUpdate(idAdm, { rol: role }, { new: true }, (error, admUpd) => {
+                if (error) return res.status(500).send({ mesaje: "Error de la petición2" });
+                if (!admUpd) return res.status(500).send({ mensaje: "Error al degradar" });
+
+                return res.status(200).send({ requester: admUpd });
+            })
         })
-
-    })
+    } else {
+        return res.status(500).send({ ERROR: "Acceso solo para Admins" });
+    }
 }
 
 require("dotenv").config();
 const aws = require("aws-sdk");
-const { Amazon } = require("aws-sdk");
-const { PutObjectCommand } = require('@aws-sdk/client-s3');
 
 const sThree = new aws.S3({
     accessKeyId: process.env.ACCESS,
@@ -316,77 +327,24 @@ function negarSolicitud(req, res) {
     }
 }
 
-/*
-    ADMIN:
-    Aprobar solicitudes: Borrar la solicitud del bucket temporal, copiarlo en el principal, cambiar su estado a Aprobado, 
-    guarda el hecho en el historial de registros.
-    Denegar solicitudes: Cambiar su estado a Denegado, (POR POCA INFORMACIÓN AL RESPECTO) dejarlo en el bucket temporal,
-    guardar el hecho en el historial de registros.
-*/
-
-/*
-using (client)
-{
-    var existingObject = client.ListObjects(requestForExisingFile).S3Objects; 
-    if (existingObject.Count == 1)
-    {
-        var requestCopyObject = new CopyObjectRequest()
-        {
-            SourceBucket = BucketNameProd,
-            SourceKey = objectToMerge.Key,
-            DestinationBucket = BucketNameDev,
-            DestinationKey = newKey
-        };
-        client.CopyObject(requestCopyObject);
-    }
-}
-
-with client being something like
-
-var config = new AmazonS3Config { CommunicationProtocol = Protocol.HTTP, ServiceURL = "s3-eu-west-1.amazonaws.com" };
-var client = AWSClientFactory.CreateAmazonS3Client(AWSAccessKey, AWSSecretAccessKey, config);
-
-//////////
-
-from cloudpathlib import CloudPath
-
-source = CloudPath("s3://bucket1/source.txt")
-destination = CloudPath("s3://bucket2/destination.txt")
-
-# create the source file
-source.write_text("hello!")
-
-# destination does not exist
-destination.exists()
-#> True
-
-# move the source file
-source.copy(destination)
-#> S3Path('s3://bucket2/destination.txt')
-
-# destination now exists
-destination.exists()
-#> True
-
-# it has the expected content
-destination.read_text()
-#> 'hello!'
-
-*/
-
 function historial(req, res) {
-    Registros.find((error, allRe) => {
-        if (error) return res.status(500).send({ mensaje: "Error de la petición" });
-        if (!allRe) return res.status(500).send({ mensaje: "Error, no se encontraron Registros" });
+    var ron = req.user.rol
+    if (ron == "Admin") {
 
-        Solicitudes.find((error, allSo) => {
+        Registros.find((error, allRe) => {
             if (error) return res.status(500).send({ mensaje: "Error de la petición" });
-            if (!allSo) return res.status(500).send({ mensaje: "Error, no se encontraron Solicitudes" });
+            if (!allRe) return res.status(500).send({ mensaje: "Error, no se encontraron Registros" });
 
-            return res.status(200).send({ historialRequester: allRe, historialAdmin: allSo });
+            Solicitudes.find((error, allSo) => {
+                if (error) return res.status(500).send({ mensaje: "Error de la petición" });
+                if (!allSo) return res.status(500).send({ mensaje: "Error, no se encontraron Solicitudes" });
+
+                return res.status(200).send({ historialRequester: allRe, historialAdmin: allSo });
+            })
         })
-    })
-
+    } else {
+        return res.status(500).send({ ERROR: "Acceso solo para Admins" });
+    }
 }
 
 module.exports = {

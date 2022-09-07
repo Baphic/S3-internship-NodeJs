@@ -27,24 +27,22 @@ const upload = multer({
 ////////////////////////////////////////////////////////////////////////////////
 
 api.get("/listDataBucket", requester.listData);
+//api.get("/listFoldersBucket", requester.listCarpetas);
 
 api.get("/downloadData/:fileName", requester.descargarData);
 api.delete("/elimarData/:fileName", requester.elimarData);
-//api.get('/listFoldersBucket', requester.listCarpetas);
 api.post('/addFolder', requester.addCarpeta);
 api.post('/uploadDataBucket', upload.array('file'), aut.Auth, requester.uploadData);
 
 api.post('/login', admin.Login);
 api.post('/registro', admin.Register);
 
-api.put('/newAdmin/:idReq', admin.addAdmin);
-api.put('/oldRequester/:idAdm', admin.removeAdmin);
+api.put('/newAdmin/:idReq', aut.Auth, admin.addAdmin);
+api.put('/oldRequester/:idAdm', aut.Auth, admin.removeAdmin);
 
 api.put('/approveRequest/:idSo', aut.Auth, admin.aprobarSolicitud);
 api.put('/denyRequest/:idSo', aut.Auth, admin.negarSolicitud);
 
-api.post('/reupload', admin.reuploadPrincipal)
-
-api.get('/historial', admin.historial)
+api.get('/historial', aut.Auth, admin.historial)
 
 module.exports = api;

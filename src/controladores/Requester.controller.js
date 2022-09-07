@@ -91,7 +91,7 @@ function historial(name, uuid, user, descripcion, res) {
 
 // agregar carpeta
 function addCarpeta(req, res) {
-  const buck = req.body.bucket;
+  const buck = process.env.BUCKET;
   const name = req.body.name + "/";
   var Objeto = { Bucket: buck, Key: name };
 
@@ -100,10 +100,6 @@ function addCarpeta(req, res) {
     return res.send({ Folder: fol })
   })
 }
-
-/*function listCarpetas(req, res) {
-  const buck = req.body.bucket;
-}*/
 
 ////////////////////////////////////////////////
 
@@ -156,6 +152,5 @@ module.exports = {
   descargarData,
   elimarData,
   uploadData,
-  //listCarpetas,
   addCarpeta
 };
