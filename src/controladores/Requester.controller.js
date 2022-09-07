@@ -120,7 +120,7 @@ function historial(user, razon, name, uuid, res) {
 
 // Agregar una carpeta
 function addCarpeta(req, res) {
-  const buck = req.body.bucket;
+  const buck = process.env.BUCKET;
   const name = req.body.name + "/";
   var Objeto = { Bucket: buck, Key: name };
 

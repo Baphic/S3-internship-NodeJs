@@ -44,15 +44,12 @@ api.post('/addFolder', requester.addCarpeta);
 api.delete("/elimarData/:fileName", requester.elimarData);
 api.put('/approveRequest/:idSo', aut.Auth, admin.aprobarSolicitud);
 api.put('/denyRequest/:idSo', aut.Auth, admin.negarSolicitud);
-api.get('/historial', admin.historial)
+api.get('/historial', admin.historial);
 api.get("/downloadData/:fileName", requester.descargarData);
-
-api.put('/newAdmin/:idReq', admin.addAdmin);
-api.put('/oldRequester/:idAdm', admin.removeAdmin);
-
+api.put('/newAdmin/:idReq', aut.Auth, admin.addAdmin);
+api.put('/oldRequester/:idAdm', aut.Auth, admin.removeAdmin);
 
 // Otros
 api.post('/reupload', admin.reuploadPrincipal)
-//api.get('/listFoldersBucket', requester.listCarpetas);
 
 module.exports = api;
