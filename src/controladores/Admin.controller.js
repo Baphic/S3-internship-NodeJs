@@ -45,11 +45,11 @@ function Login(req, res) {
                         if (verificacionPassword) {
 
                             if (parametros.Token === "true") {
-                                return res.status(200).send({ token: jwt.crearToken(usuarioEncontrado),usuarioEncontrado })
+                                return res.status(200).send({ token: jwt.crearToken(usuarioEncontrado), infoUser: usuarioEncontrado})
                             }
                         } else {
                             usuarioEncontrado.password = undefined;
-                            return res.status(200).send({ error: "Contraseña y/o usuario incorrecto" })
+                            return res.status(500).send({ mensaje: "Contraseña y/o usuario incorrecto" })
                         }
                     })
 
