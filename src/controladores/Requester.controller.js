@@ -155,7 +155,6 @@ const listDataDirectorio = (req,res)=>{
   let parametros = req.body;
   const paramss3 = {
     Bucket: process.env.BUCKET,
-    Delimiter: '.jpg',
     StartAfter: parametros.directorio,
   }
   temporal.listObjectsV2(paramss3,(error,archivos)=>{
@@ -166,7 +165,6 @@ const listDataDirectorio = (req,res)=>{
 
 const listDataDirectorioTemporal = (req,res)=>{
   let parametros = req.body;
-  console.log(parametros.directorio)
   const paramss3 = {
     Bucket: process.env.BUCKET_REQUESTER,
     StartAfter: parametros.directorio,
