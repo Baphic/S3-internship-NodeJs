@@ -1,4 +1,3 @@
-
 const express = require('express');
 const requester = require('../controladores/Requester.controller');
 const admin = require('../controladores/Admin.controller');
@@ -32,20 +31,20 @@ api.post('/registro', admin.Register);
 
 
 // Opciones del Requester
-api.get("/listDataBucket",  requester.listData);
-api.get("/listDataBucketTemporal",  requester.listDataTermporal);
-api.get("/listDataDirectorioBucket",  requester.listDataDirectorio);
-api.get("/listDataDirectorioBucketTemporal",  requester.listDataDirectorioTemporal);
+api.get("/listDataBucket", requester.listData);
+api.get("/listDataBucketTemporal", requester.listDataTermporal);
+api.get("/listDataDirectorioBucket", requester.listDataDirectorio);
+api.get("/listDataDirectorioBucketTemporal", requester.listDataDirectorioTemporal);
 api.post('/uploadDataBucket', upload.array('file'), aut.Auth, requester.uploadData);
 
 
 // Opciones del Administrador
-api.post('/addFolder', requester.addCarpeta);
-api.delete("/elimarData/:fileName", requester.elimarData);
+api.post('/addFolder', aut.Auth, admin.addCarpeta);
+api.delete("/eliminarData/:fileName", aut.Auth, admin.eliminarData);
 api.put('/approveRequest/:idSo', aut.Auth, admin.aprobarSolicitud);
 api.put('/denyRequest/:idSo', aut.Auth, admin.negarSolicitud);
-api.get('/historial', admin.historial);
-api.get("/downloadData/:fileName", requester.descargarData);
+api.get('/historial', aut.Auth, admin.historial);
+api.get("/downloadData/:fileName", aut.Auth, admin.descargarData);
 api.put('/newAdmin/:idReq', aut.Auth, admin.addAdmin);
 api.put('/oldRequester/:idAdm', aut.Auth, admin.removeAdmin);
 

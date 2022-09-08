@@ -45,11 +45,11 @@ function Login(req, res) {
                         if (verificacionPassword) {
 
                             if (parametros.Token === "true") {
-                                return res.status(200).send({ token: jwt.crearToken(usuarioEncontrado),usuarioEncontrado })
+                                return res.status(200).send({ token: jwt.crearToken(usuarioEncontrado), infoUser: usuarioEncontrado })
                             }
                         } else {
                             usuarioEncontrado.password = undefined;
-                            return res.status(200).send({ error: "Contraseña y/o usuario incorrecto" })
+                            return res.status(500).send({ mensaje: "Contraseña y/o usuario incorrecto" })
                         }
                     })
 
@@ -198,7 +198,7 @@ function aprobarSolicitud(req, res) {
             if (error) res.status(500).send({ error: "error en la petición2" });
             if (!SolEn) res.status(500).send({ error: "No existe esta Solicitud" })
 
-            const status = "Aprovado";
+            const status = "Aprobado";
             const UUID = SolEn.UUID;
 
             Solicitudes.findByIdAndUpdate(idSo, { estado: status }, { new: true }, (error, solApr) => {
@@ -207,12 +207,19 @@ function aprobarSolicitud(req, res) {
 
                 historial.Admin = min.usuario;
                 historial.fecha = fecha;
-                historial.accion = "Aprovar Solicitud"
+                historial.accion = "Aprobar Solicitud"
                 historial.UUID = UUID;
 
                 historial.save((error, newRequest) => {
                     if (error) return res.status(500).send({ mesaje: "Error de la petición4" });
                     if (!newRequest) return res.status(500).send({ mensaje: "Error al registrar " });
+
+                    if (UUID.includes("/") == true) {
+                        fs.mkdirSync(('/' + UUID), { recursive: true });
+
+                    } else if (UUID.includes == false) {
+                        fs.mkdirSync((UUID), { recursive: true });
+                    }
 
                     reuploadPrincipalGet(UUID);
 
@@ -238,10 +245,9 @@ function reuploadPrincipalGet(UUID, res) {
     //console.log(params)
 
     sThree.getObject(params, (error, object) => {
-        //console.log(object);
 
         fs.writeFile('temp/' + path, object.Body, 'binary', (err) => {
-            if (err) res.status(500).send({ error: "Error en la petición2" });
+            if (err) console.log(err);
 
             reuploadPrincipal(path);
         })
@@ -351,6 +357,64 @@ function historial(req, res) {
     }
 }
 
+
+// Agregar una carpeta
+function addCarpeta(req, res) {
+    var min = req.user;
+
+    if (min.rol != "Admin")
+        return res.status(500).send({ ERROR: "Solo los administradores pueden agregar un nuevo directorio" });
+
+    const buck = process.env.BUCKET;
+    const name = req.body.name + "/";
+    var Objeto = { Bucket: buck, Key: name };
+
+    temporal.putObject(Objeto, (error, fol) => {
+        if (error) return res.send({ error: error })
+        return res.send({ Folder: fol })
+    })
+}
+
+
+// Descargar Datos
+const descargarData = (req, res) => {
+    var min = req.user;
+
+    if (min.rol != "Admin")
+        return res.status(500).send({ ERROR: "Solo los administradores pueden descargar datos" });
+
+    const fileName = req.params.fileName;
+    temporal.getObject(
+        { Bucket: process.env.BUCKET, Key: fileName },
+        (err, file) => {
+            if (err) return res.send({ err });
+
+            res.send(file.Body);
+        }
+    );
+};
+
+
+//Eliminar Datos
+const eliminarData = (req, res) => {
+    var min = req.user;
+
+    if (min.rol != "Admin")
+        return res.status(500).send({ ERROR: "Solo los administradores pueden eliminar datos" });
+
+    const fileName = req.params.fileName;
+    temporal.deleteObject(
+        { Bucket: process.env.BUCKET, Key: fileName },
+        (err, file) => {
+            if (err) return res.send({ err });
+
+
+            res.send("Documento Eliminado");
+        }
+    );
+};
+
+
 module.exports = {
     Admin,
     Login,
@@ -360,5 +424,8 @@ module.exports = {
     negarSolicitud,
     aprobarSolicitud,
     historial,
-    reuploadPrincipal, reuploadPrincipalGet, reuploadPrincipalDelete
+    reuploadPrincipal, reuploadPrincipalGet, reuploadPrincipalDelete,
+    addCarpeta,
+    descargarData,
+    eliminarData
 }

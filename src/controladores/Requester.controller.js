@@ -15,19 +15,21 @@ const temporal = new Amazon.S3({
   secretAccessKey: process.env.SECRET,
 });
 
-const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+const { S3Client, PutObjectCommand, ConditionFilterSensitiveLog } = require("@aws-sdk/client-s3");
 const express = require("express");
 const multer = require("multer");
 const uuid = require("uuid").v4;
 
+
 // Agregar Datos a S3
 const uploadData = async (req, res) => {
   let des = req.body.descrip
+  let fol = req.body.folder
   try {
-    console.log(req.user)
-    console.log(des)
+    //console.log(req.user)
+    //console.log(des)
 
-    const results = await s3Upload(req.files, req.user, des);
+    const results = await s3Upload(req.files, req.user, des, fol);
 
     return res.json({ status: "success" });
   } catch (err) {
@@ -37,12 +39,10 @@ const uploadData = async (req, res) => {
 
 
 // Subir datos al bucket temporal
-const s3Upload = async (files, user, des) => {
+const s3Upload = async (files, user, des, fol) => {
   const s3 = new S3();
 
   const params = files.map((file) => {
-    //console.log(user)
-    //console.log("logeado")
 
     let bucket;
     if (user.rol == 'Requester') {
@@ -51,13 +51,18 @@ const s3Upload = async (files, user, des) => {
       bucket = process.env.BUCKET;
     }
 
-    const K = `${uuid()}`
+    let K;
+    if (fol != null) {
+      K = `${fol + uuid()}`
+    } else if (fol == null) {
+      K = `${uuid()}`
+    }
 
-    let razon = des;
+    let descripcion = des;
     let _id = K;
     let name = file.originalname;
 
-    solicitud(user.usuario, razon, name, _id);
+    solicitud(user.usuario, _id, name, descripcion);
 
     return {
       Bucket: bucket,
@@ -118,19 +123,6 @@ function historial(user, razon, name, uuid, res) {
 }
 
 
-// Agregar una carpeta
-function addCarpeta(req, res) {
-  const buck = process.env.BUCKET;
-  const name = req.body.name + "/";
-  var Objeto = { Bucket: buck, Key: name };
-
-  temporal.putObject(Objeto, (error, fol) => {
-    if (error) return res.send({ error: error })
-    return res.send({ Folder: fol })
-  })
-}
-
-
 // Listar Datos
 function listData(req, res) {
 
@@ -150,81 +142,49 @@ function listData(req, res) {
   });
 }
 
-const listDataTermporal = (req,res)=>{
+const listDataTermporal = (req, res) => {
 
   const paramss3 = {
     Bucket: process.env.BUCKET_REQUESTER,
     Delimiter: '/'
   }
 
-  temporal.listObjectsV2(paramss3,(error,archivos)=>{
-    if(error) return res.send({error:error});
-    return res.send({Data:archivos.CommonPrefixes});
+  temporal.listObjectsV2(paramss3, (error, archivos) => {
+    if (error) return res.send({ error: error });
+    return res.send({ Data: archivos.CommonPrefixes });
   })
 }
 
-const listDataDirectorio = (req,res)=>{
+const listDataDirectorio = (req, res) => {
   let parametros = req.body;
   const paramss3 = {
     Bucket: process.env.BUCKET,
-    Delimiter: '.jpg',
     StartAfter: parametros.directorio,
   }
-  temporal.listObjectsV2(paramss3,(error,archivos)=>{
-    if(error) return res.send({error:error});
-    return res.send({Data:archivos.Contents});
+  temporal.listObjectsV2(paramss3, (error, archivos) => {
+    if (error) return res.send({ error: error });
+    return res.send({ Data: archivos.Contents });
   })
 }
 
-const listDataDirectorioTemporal = (req,res)=>{
+const listDataDirectorioTemporal = (req, res) => {
   let parametros = req.body;
-  console.log(parametros.directorio)
   const paramss3 = {
     Bucket: process.env.BUCKET_REQUESTER,
     StartAfter: parametros.directorio,
   }
-  temporal.listObjectsV2(paramss3,(error,archivos)=>{
-    if(error) return res.send({error:error});
-    return res.send({Data:archivos.Contents});
+  temporal.listObjectsV2(paramss3, (error, archivos) => {
+    if (error) return res.send({ error: error });
+    return res.send({ Data: archivos.Contents });
   })
 }
 
-// Descargar Datos
-const descargarData = (req, res) => {
-  const fileName = req.params.fileName;
-  temporal.getObject(
-    { Bucket: process.env.BUCKET, Key: fileName },
-    (err, file) => {
-      if (err) return res.send({ err });
-
-      res.send(file.Body);
-    }
-  );
-};
-
-
-//Eliminar Datos
-const elimarData = (req, res) => {
-  const fileName = req.params.fileName;
-  temporal.deleteObject(
-    { Bucket: process.env.BUCKET, Key: fileName },
-    (err, file) => {
-      if (err) return res.send({ err });
-
-
-      res.send("Documento Eliminado");
-    }
-  );
-};
 
 
 module.exports = {
   listData,
   historial,
-  descargarData,
-  elimarData,
   uploadData,
-  addCarpeta,
   listDataTermporal,
   listDataDirectorio,
   listDataDirectorioTemporal
