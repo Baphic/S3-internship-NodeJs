@@ -155,7 +155,7 @@ const listDataDirectorio = (req,res)=>{
   let parametros = req.body;
   const paramss3 = {
     Bucket: process.env.BUCKET,
-    StartAfter: parametros.directorio,
+    Prefix:parametros.directorio
   }
   temporal.listObjectsV2(paramss3,(error,archivos)=>{
     if(error) return res.send({error:error});
@@ -167,7 +167,7 @@ const listDataDirectorioTemporal = (req,res)=>{
   let parametros = req.body;
   const paramss3 = {
     Bucket: process.env.BUCKET_REQUESTER,
-    StartAfter: parametros.directorio,
+    Prefix:parametros.directorio
   }
   temporal.listObjectsV2(paramss3,(error,archivos)=>{
     if(error) return res.send({error:error});
