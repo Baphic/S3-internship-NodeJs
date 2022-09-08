@@ -20,6 +20,7 @@ const express = require("express");
 const multer = require("multer");
 const uuid = require("uuid").v4;
 
+
 // Agregar Datos a S3
 const uploadData = async (req, res) => {
   let des = req.body.descrip
@@ -53,11 +54,11 @@ const s3Upload = async (files, user, des) => {
 
     const K = `${uuid()}`
 
-    let razon = des;
+    let descripcion = des;
     let _id = K;
     let name = file.originalname;
 
-    solicitud(user.usuario, razon, name, _id);
+    solicitud(user.usuario, _id, name, descripcion);
 
     return {
       Bucket: bucket,
@@ -115,19 +116,6 @@ function historial(user, razon, name, uuid, res) {
     if (!registroGuardado) return res.status(500).send({ mensaje: "Error, no se agrego el registro" });
 
   });
-}
-
-
-// Agregar una carpeta
-function addCarpeta(req, res) {
-  const buck = process.env.BUCKET;
-  const name = req.body.name + "/";
-  var Objeto = { Bucket: buck, Key: name };
-
-  temporal.putObject(Objeto, (error, fol) => {
-    if (error) return res.send({ error: error })
-    return res.send({ Folder: fol })
-  })
 }
 
 
@@ -189,42 +177,12 @@ const listDataDirectorioTemporal = (req,res)=>{
   })
 }
 
-// Descargar Datos
-const descargarData = (req, res) => {
-  const fileName = req.params.fileName;
-  temporal.getObject(
-    { Bucket: process.env.BUCKET, Key: fileName },
-    (err, file) => {
-      if (err) return res.send({ err });
-
-      res.send(file.Body);
-    }
-  );
-};
-
-
-//Eliminar Datos
-const elimarData = (req, res) => {
-  const fileName = req.params.fileName;
-  temporal.deleteObject(
-    { Bucket: process.env.BUCKET, Key: fileName },
-    (err, file) => {
-      if (err) return res.send({ err });
-
-
-      res.send("Documento Eliminado");
-    }
-  );
-};
 
 
 module.exports = {
   listData,
   historial,
-  descargarData,
-  elimarData,
   uploadData,
-  addCarpeta,
   listDataTermporal,
   listDataDirectorio,
   listDataDirectorioTemporal
