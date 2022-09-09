@@ -143,7 +143,6 @@ function listData(req, res) {
 }
 
 const listDataTermporal = (req, res) => {
-
   const paramss3 = {
     Bucket: process.env.BUCKET_REQUESTER,
     Delimiter: '/'
@@ -156,12 +155,12 @@ const listDataTermporal = (req, res) => {
 }
 
 const listDataDirectorio = (req, res) => {
-  let parametros = req.body;
+  //let parametros = req.body;
   var directorio = req.params.directorio;
   const paramss3 = {
     Bucket: process.env.BUCKET,
-    StartAfter:directorio + "/",
-    Prefix:directorio + "/"
+    StartAfter: directorio + "/",
+    Prefix: directorio + "/"
   }
   temporal.listObjectsV2(paramss3, (error, archivos) => {
     if (error) return res.send({ error: error });
@@ -173,8 +172,8 @@ const listDataDirectorioTemporal = (req, res) => {
   let parametros = req.body;
   const paramss3 = {
     Bucket: process.env.BUCKET_REQUESTER,
-    StartAfter:parametros.directorio,
-    Prefix:parametros.directorio
+    StartAfter: parametros.directorio,
+    Prefix: parametros.directorio
   }
   temporal.listObjectsV2(paramss3, (error, archivos) => {
     if (error) return res.send({ error: error });

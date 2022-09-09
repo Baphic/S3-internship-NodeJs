@@ -127,7 +127,7 @@ function Register(req, res) {
     }
 }
 
-
+// Cambiar rol
 function addAdmin(req, res) {
     var idReq = req.params.idReq;
     const role = "Admin";
@@ -153,12 +153,10 @@ function addAdmin(req, res) {
     }
 }
 
-// Cambiar rol
 function removeAdmin(req, res) {
     var idAdm = req.params.idAdm;
     const role = "Requester";
     var run = req.user.rol
-
 
     if (run == "Admin") {
         Usuario.findById(idAdm, (error, uEn) => {
@@ -179,6 +177,7 @@ function removeAdmin(req, res) {
     }
 }
 
+
 require("dotenv").config();
 const aws = require("aws-sdk");
 
@@ -191,7 +190,6 @@ function aprobarSolicitud(req, res) {
     var min = req.user;
     var idSo = req.params.idSo;
     var fecha = new Date();
-    var historial = new Registros();
 
     if (min.rol == "Admin") {
 
@@ -202,30 +200,20 @@ function aprobarSolicitud(req, res) {
             const status = "Aprobado";
             const UUID = SolEn.UUID;
 
-            Solicitudes.findByIdAndUpdate(idSo, { estado: status }, { new: true }, (error, solApr) => {
+            Solicitudes.findByIdAndUpdate(idSo, { estado: status, fechaEstado: fecha }, { new: true }, (error, solApr) => {
                 if (error) return res.status(500).send({ mesaje: "Error de la petición3" });
                 if (!solApr) return res.status(500).send({ mensaje: "Error al Denegar" });
 
-                historial.Admin = min.usuario;
-                historial.fecha = fecha;
-                historial.accion = "Aprobar Solicitud"
-                historial.UUID = UUID;
+                if (UUID.includes("/") == true) {
+                    fs.mkdirSync(('/' + UUID), { recursive: true });
 
-                historial.save((error, newRequest) => {
-                    if (error) return res.status(500).send({ mesaje: "Error de la petición4" });
-                    if (!newRequest) return res.status(500).send({ mensaje: "Error al registrar " });
+                } else if (UUID.includes == false) {
+                    fs.mkdirSync((UUID), { recursive: true });
+                }
 
-                    if (UUID.includes("/") == true) {
-                        fs.mkdirSync(('/' + UUID), { recursive: true });
+                reuploadPrincipalGet(UUID);
 
-                    } else if (UUID.includes == false) {
-                        fs.mkdirSync((UUID), { recursive: true });
-                    }
-
-                    reuploadPrincipalGet(UUID);
-
-                    return res.send({ Inicio: newRequest })
-                })
+                return res.send({ Inicio: solApr })
             })
         })
 
@@ -299,13 +287,12 @@ function reuploadPrincipalDelete(path, res) {
         })
     })
 }
-////////////////////////////////////////////////////
+/////
 
 function negarSolicitud(req, res) {
     const min = req.user;
     var idSo = req.params.idSo;
     var fecha = new Date();
-    var historial = new Registros();
 
     if (min.rol == "Admin") {
 
@@ -315,21 +302,11 @@ function negarSolicitud(req, res) {
 
             const status = "Denegado";
 
-            Solicitudes.findByIdAndUpdate(idSo, { estado: status }, { new: true }, (error, solDen) => {
+            Solicitudes.findByIdAndUpdate(idSo, { estado: status, fechaEstado: fecha }, { new: true }, (error, solDen) => {
                 if (error) return res.status(500).send({ mesaje: "Error de la petición3" });
                 if (!solDen) return res.status(500).send({ mensaje: "Error al Denegar" });
 
-                historial.Admin = min.usuario;
-                historial.fecha = fecha;
-                historial.accion = "Denegar Solicitud"
-                historial.UUID = SolEn.UUID;
-
-                historial.save((error, newRecord) => {
-                    if (error) return res.status(500).send({ mesaje: "Error de la petición4" });
-                    if (!newRecord) return res.status(500).send({ mensaje: "Error al registrar " });
-
-                    return res.status(200).send({ Negacion: solDen, Registro: newRecord });
-                })
+                return res.status(200).send({ Negacion: solDen });
             })
         })
 
@@ -337,55 +314,33 @@ function negarSolicitud(req, res) {
         return res.status(500).send({ ERROR: "Acceso solo para Admins" });
     }
 }
-
-function historial(req, res) {
-    var ron = req.user.rol
-    if (ron == "Admin") {
-
-        Registros.find((error, allRe) => {
-            if (error) return res.status(500).send({ mensaje: "Error de la petición" });
-            if (!allRe) return res.status(500).send({ mensaje: "Error, no se encontraron Registros" });
-
-            Solicitudes.find((error, allSo) => {
-                if (error) return res.status(500).send({ mensaje: "Error de la petición" });
-                if (!allSo) return res.status(500).send({ mensaje: "Error, no se encontraron Solicitudes" });
-
-                return res.status(200).send({ historialRequester: allSo, historialAdmin: allRe });
-            })
-        })
-    } else {
-        return res.status(500).send({ ERROR: "Acceso solo para Admins" });
-    }
-}
-
-function listRegistros(req, res) {
-    var rol = req.user.rol
-    if (rol == "Admin") {
-
-        Registros.find((error, allRe) => {
-            if (error) return res.status(500).send({ mensaje: "Error de la petición" });
-            if (!allRe) return res.status(500).send({ mensaje: "Error, no se encontraron Registros" });
-
-            return res.status(200).send({ historialAdmin: allRe });
-        })
-    } else {
-        return res.status(500).send({ ERROR: "Acceso solo para Admins" });
-    }
-}
+/////////////////////////////////////////////////////
 
 function listSolicitudes(req, res) {
-    var rol = req.user.rol
-    if (rol == "Admin") {
+    Solicitudes.find({estado: {$regex:"Pendiente", $options: 'i'}},(error, allSo) => {
+        if (error) return res.status(500).send({ mensaje: "Error de la petición" });
+        if (!allSo) return res.status(500).send({ mensaje: "Error, no se encontraron Solicitudes" });
 
-        Solicitudes.find((error, allSo) => {
-            if (error) return res.status(500).send({ mensaje: "Error de la petición" });
-            if (!allSo) return res.status(500).send({ mensaje: "Error, no se encontraron Solicitudes" });
+        return res.status(200).send({ historialRequester: allSo });
+    })
+}
 
-            return res.status(200).send({ historialRequester: allSo });
-        })
-    } else {
-        return res.status(500).send({ ERROR: "Acceso solo para Admins" });
-    }
+function listAprobados(req, res) {
+    Solicitudes.find({estado: {$regex:"Aprobado", $options: 'i'}},(error, allSo) => {
+        if (error) return res.status(500).send({ mensaje: "Error de la petición" });
+        if (!allSo) return res.status(500).send({ mensaje: "Error, no se encontraron Solicitudes" });
+
+        return res.status(200).send({ historialRequester: allSo });
+    })
+}
+
+function listDenegados(req, res) {
+    Solicitudes.find({estado: {$regex:"Denegado", $options: 'i'}},(error, allSo) => {
+        if (error) return res.status(500).send({ mensaje: "Error de la petición" });
+        if (!allSo) return res.status(500).send({ mensaje: "Error, no se encontraron Solicitudes" });
+
+        return res.status(200).send({ historialRequester: allSo });
+    })
 }
 
 // Agregar una carpeta
@@ -455,11 +410,11 @@ module.exports = {
     removeAdmin,
     negarSolicitud,
     aprobarSolicitud,
-    historial,
     reuploadPrincipal, reuploadPrincipalGet, reuploadPrincipalDelete,
     addCarpeta,
     descargarData,
     eliminarData,
-    listRegistros,
-    listSolicitudes
+    listSolicitudes,
+    listAprobados,
+    listDenegados
 }

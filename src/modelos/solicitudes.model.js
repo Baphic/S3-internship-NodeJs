@@ -7,6 +7,7 @@ var SolicitudSchema = Schema({
     descripcion: String,
     nombre: String,
     UUID: String,
-    estado: String
+    estado: String,
+    fechaEstado: Date
 });
 module.exports = mongoose.model('solicitudes', SolicitudSchema);
