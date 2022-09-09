@@ -15,7 +15,7 @@ const temporal = new Amazon.S3({
   secretAccessKey: process.env.SECRET,
 });
 
-const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+const { S3Client, PutObjectCommand, ConditionFilterSensitiveLog } = require("@aws-sdk/client-s3");
 const express = require("express");
 const multer = require("multer");
 const uuid = require("uuid").v4;
@@ -24,11 +24,12 @@ const uuid = require("uuid").v4;
 // Agregar Datos a S3
 const uploadData = async (req, res) => {
   let des = req.body.descrip
+  let fol = req.body.folder
   try {
-    console.log(req.user)
-    console.log(des)
+    //console.log(req.user)
+    //console.log(des)
 
-    const results = await s3Upload(req.files, req.user, des);
+    const results = await s3Upload(req.files, req.user, des, fol);
 
     return res.json({ status: "success" });
   } catch (err) {
@@ -38,12 +39,10 @@ const uploadData = async (req, res) => {
 
 
 // Subir datos al bucket temporal
-const s3Upload = async (files, user, des) => {
+const s3Upload = async (files, user, des, fol) => {
   const s3 = new S3();
 
   const params = files.map((file) => {
-    //console.log(user)
-    //console.log("logeado")
 
     let bucket;
     if (user.rol == 'Requester') {
@@ -52,7 +51,12 @@ const s3Upload = async (files, user, des) => {
       bucket = process.env.BUCKET;
     }
 
-    const K = `${uuid()}`
+    let K;
+    if (fol != null) {
+      K = `${fol + uuid()}`
+    } else if (fol == null) {
+      K = `${uuid()}`
+    }
 
     let descripcion = des;
     let _id = K;
@@ -138,20 +142,20 @@ function listData(req, res) {
   });
 }
 
-const listDataTermporal = (req,res)=>{
+const listDataTermporal = (req, res) => {
 
   const paramss3 = {
     Bucket: process.env.BUCKET_REQUESTER,
     Delimiter: '/'
   }
 
-  temporal.listObjectsV2(paramss3,(error,archivos)=>{
-    if(error) return res.send({error:error});
-    return res.send({Data:archivos.CommonPrefixes});
+  temporal.listObjectsV2(paramss3, (error, archivos) => {
+    if (error) return res.send({ error: error });
+    return res.send({ Data: archivos.CommonPrefixes });
   })
 }
 
-const listDataDirectorio = (req,res)=>{
+const listDataDirectorio = (req, res) => {
   let parametros = req.body;
   var directorio = req.params.directorio;
   const paramss3 = {
@@ -159,22 +163,22 @@ const listDataDirectorio = (req,res)=>{
     StartAfter:directorio + "/",
     Prefix:directorio + "/"
   }
-  temporal.listObjectsV2(paramss3,(error,archivos)=>{
-    if(error) return res.send({error:error});
-    return res.send({Data:archivos.Contents});
+  temporal.listObjectsV2(paramss3, (error, archivos) => {
+    if (error) return res.send({ error: error });
+    return res.send({ Data: archivos.Contents });
   })
 }
 
-const listDataDirectorioTemporal = (req,res)=>{
+const listDataDirectorioTemporal = (req, res) => {
   let parametros = req.body;
   const paramss3 = {
     Bucket: process.env.BUCKET_REQUESTER,
     StartAfter:parametros.directorio,
     Prefix:parametros.directorio
   }
-  temporal.listObjectsV2(paramss3,(error,archivos)=>{
-    if(error) return res.send({error:error});
-    return res.send({Data:archivos.Contents});
+  temporal.listObjectsV2(paramss3, (error, archivos) => {
+    if (error) return res.send({ error: error });
+    return res.send({ Data: archivos.Contents });
   })
 }
 

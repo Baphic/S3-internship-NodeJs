@@ -46,6 +46,7 @@ function Login(req, res) {
 
                             if (parametros.Token === "true") {
                                 return res.status(200).send({ token: jwt.crearToken(usuarioEncontrado), infoUser: usuarioEncontrado})
+
                             }
                         } else {
                             usuarioEncontrado.password = undefined;
@@ -214,6 +215,13 @@ function aprobarSolicitud(req, res) {
                     if (error) return res.status(500).send({ mesaje: "Error de la petición4" });
                     if (!newRequest) return res.status(500).send({ mensaje: "Error al registrar " });
 
+                    if (UUID.includes("/") == true) {
+                        fs.mkdirSync(('/' + UUID), { recursive: true });
+
+                    } else if (UUID.includes == false) {
+                        fs.mkdirSync((UUID), { recursive: true });
+                    }
+
                     reuploadPrincipalGet(UUID);
 
                     return res.send({ Inicio: newRequest })
@@ -238,10 +246,9 @@ function reuploadPrincipalGet(UUID, res) {
     //console.log(params)
 
     sThree.getObject(params, (error, object) => {
-        //console.log(object);
 
         fs.writeFile('temp/' + path, object.Body, 'binary', (err) => {
-            if (err) res.status(500).send({ error: "Error en la petición2" });
+            if (err) console.log(err);
 
             reuploadPrincipal(path);
         })
@@ -357,7 +364,9 @@ function addCarpeta(req, res) {
     var min = req.user;
 
     if (min.rol != "Admin")
+
     return res.status(500).send({ ERROR: "Solo los administradores pueden agregar un nuevo directorio" });
+
 
     const buck = process.env.BUCKET;
     const name = req.body.name + "/";
@@ -379,31 +388,31 @@ const descargarData = (req, res) => {
 
     const fileName = req.params.fileName;
     temporal.getObject(
-      { Bucket: process.env.BUCKET, Key: fileName },
-      (err, file) => {
-        if (err) return res.send({ err });
-  
-        res.send(file.Body);
-      }
+        { Bucket: process.env.BUCKET, Key: fileName },
+        (err, file) => {
+            if (err) return res.send({ err });
+
+            res.send(file.Body);
+        }
     );
 };
-  
-  
+
+
 //Eliminar Datos
 const eliminarData = (req, res) => {
     var min = req.user;
 
     if (min.rol != "Admin")
-    return res.status(500).send({ ERROR: "Solo los administradores pueden eliminar datos" });
+        return res.status(500).send({ ERROR: "Solo los administradores pueden eliminar datos" });
 
     const fileName = req.params.fileName;
     temporal.deleteObject(
         { Bucket: process.env.BUCKET, Key: fileName },
         (err, file) => {
-        if (err) return res.send({ err });
+            if (err) return res.send({ err });
 
 
-        res.send("Documento Eliminado");
+            res.send("Documento Eliminado");
         }
     );
 };
