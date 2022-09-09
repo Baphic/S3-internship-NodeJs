@@ -45,7 +45,7 @@ function Login(req, res) {
                         if (verificacionPassword) {
 
                             if (parametros.Token === "true") {
-                                return res.status(200).send({ token: jwt.crearToken(usuarioEncontrado), infoUser: usuarioEncontrado})
+                                return res.status(200).send({ token: jwt.crearToken(usuarioEncontrado), infoUser: usuarioEncontrado })
 
                             }
                         } else {
@@ -350,7 +350,7 @@ function historial(req, res) {
                 if (error) return res.status(500).send({ mensaje: "Error de la petición" });
                 if (!allSo) return res.status(500).send({ mensaje: "Error, no se encontraron Solicitudes" });
 
-                return res.status(200).send({ historialRequester: allRe, historialAdmin: allSo });
+                return res.status(200).send({ historialRequester: allSo, historialAdmin: allRe });
             })
         })
     } else {
@@ -358,6 +358,35 @@ function historial(req, res) {
     }
 }
 
+function listRegistros(req, res) {
+    var rol = req.user.rol
+    if (rol == "Admin") {
+
+        Registros.find((error, allRe) => {
+            if (error) return res.status(500).send({ mensaje: "Error de la petición" });
+            if (!allRe) return res.status(500).send({ mensaje: "Error, no se encontraron Registros" });
+
+            return res.status(200).send({ historialAdmin: allRe });
+        })
+    } else {
+        return res.status(500).send({ ERROR: "Acceso solo para Admins" });
+    }
+}
+
+function listSolicitudes(req, res) {
+    var rol = req.user.rol
+    if (rol == "Admin") {
+
+        Solicitudes.find((error, allSo) => {
+            if (error) return res.status(500).send({ mensaje: "Error de la petición" });
+            if (!allSo) return res.status(500).send({ mensaje: "Error, no se encontraron Solicitudes" });
+
+            return res.status(200).send({ historialRequester: allSo });
+        })
+    } else {
+        return res.status(500).send({ ERROR: "Acceso solo para Admins" });
+    }
+}
 
 // Agregar una carpeta
 function addCarpeta(req, res) {
@@ -365,7 +394,7 @@ function addCarpeta(req, res) {
 
     if (min.rol != "Admin")
 
-    return res.status(500).send({ ERROR: "Solo los administradores pueden agregar un nuevo directorio" });
+        return res.status(500).send({ ERROR: "Solo los administradores pueden agregar un nuevo directorio" });
 
 
     const buck = process.env.BUCKET;
@@ -384,7 +413,7 @@ const descargarData = (req, res) => {
     var min = req.user;
 
     if (min.rol != "Admin")
-    return res.status(500).send({ ERROR: "Solo los administradores pueden descargar datos" });
+        return res.status(500).send({ ERROR: "Solo los administradores pueden descargar datos" });
 
     const fileName = req.params.fileName;
     temporal.getObject(
@@ -430,5 +459,7 @@ module.exports = {
     reuploadPrincipal, reuploadPrincipalGet, reuploadPrincipalDelete,
     addCarpeta,
     descargarData,
-    eliminarData
+    eliminarData,
+    listRegistros,
+    listSolicitudes
 }
