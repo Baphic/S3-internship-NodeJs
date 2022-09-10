@@ -42,7 +42,11 @@ const uploadData = async (req, res) => {
 const s3Upload = async (files, user, des, fol) => {
   const s3 = new S3();
 
+  console.log(files)
+
   const params = files.map((file) => {
+
+    const ext = file.originalname.split(".").pop();
 
     let bucket;
     if (user.rol == 'Requester') {
@@ -53,7 +57,7 @@ const s3Upload = async (files, user, des, fol) => {
 
     let K;
     if (fol != null) {
-      K = `${fol + uuid()}`
+      K = `${fol + uuid()+'.'+ext}`
     } else if (fol == null) {
       K = `${uuid()}`
     }
@@ -72,6 +76,7 @@ const s3Upload = async (files, user, des, fol) => {
   });
 
   try {
+    console.log(params)
     return await Promise.all(params.map((param) => s3.upload(param).promise()));
   } catch (err) {
     console.log(err);
@@ -126,10 +131,10 @@ function historial(user, razon, name, uuid, res) {
 // Listar Datos
 function listData(req, res) {
 
-  // const min = req.user;
+  const min = req.user;
 
-  // if (min.rol != "")
-  // return res.status(500).send({mensaje:'Solo el requester puede listar los directorios'})
+  if (min.rol != "Requester")
+  return res.status(500).send({mensaje:'Solo el requester puede listar los directorios'})
 
   const paramss3 = {
     Bucket: process.env.BUCKET,
