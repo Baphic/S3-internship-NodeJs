@@ -283,30 +283,30 @@ function aprobarSolicitud(req, res) {
 
     console.log(idSo)
 
-      const status = "Aprobado";
-      const UUID = idSo;
+    const status = "Aprobado";
+    const UUID = idSo;
 
-      Solicitudes.findOneAndUpdate(
-        {UUID:UUID},
-        { estado: status, fechaEstado: fecha },
-        { new: true },
-        (error, solApr) => {
-          if (error)
-            return res.status(500).send({ mesaje: "Error de la petición3" });
-          if (!solApr)
-            return res.status(500).send({ mensaje: "Error al Denegar" });
+    Solicitudes.findOneAndUpdate(
+      { UUID: UUID },
+      { estado: status, fechaEstado: fecha },
+      { new: true },
+      (error, solApr) => {
+        if (error)
+          return res.status(500).send({ mesaje: "Error de la petición3" });
+        if (!solApr)
+          return res.status(500).send({ mensaje: "Error al Denegar" });
 
-          if (UUID.includes("/") == true) {
-            fs.mkdirSync("/" + UUID, { recursive: true });
-          } else if (UUID.includes == false) {
-            fs.mkdirSync(UUID, { recursive: true });
-          }
-
-          reuploadPrincipalGet(UUID);
-
-          return res.send({ Inicio: solApr });
+        if (UUID.includes("/") == true) {
+          fs.mkdirSync("/" + UUID, { recursive: true });
+        } else if (UUID.includes == false) {
+          fs.mkdirSync(UUID, { recursive: true });
         }
-      );
+
+        reuploadPrincipalGet(UUID);
+
+        return res.send({ Inicio: solApr });
+      }
+    );
   } else {
     return res.status(500).send({ ERROR: "Acceso solo para Admins" });
   }
@@ -382,28 +382,28 @@ function negarSolicitud(req, res) {
   var idSo = req.body.idSo;
   var fecha = new Date();
 
-//   if (min.rol == "Admin") {
+  //   if (min.rol == "Admin") {
 
-    console.log(idSo)
+  console.log(idSo)
 
-      const status = "Denegado";
+  const status = "Denegado";
 
-      Solicitudes.findOneAndUpdate(
-        {UUID:idSo},
-        { estado: status, fechaEstado: fecha },
-        { new: true },
-        (error, solDen) => {
-          if (error)
-            return res.status(500).send({ mesaje: "Error de la petición3" });
-          if (!solDen)
-            return res.status(500).send({ mensaje: "Error al Denegar" });
+  Solicitudes.findOneAndUpdate(
+    { UUID: idSo },
+    { estado: status, fechaEstado: fecha },
+    { new: true },
+    (error, solDen) => {
+      if (error)
+        return res.status(500).send({ mesaje: "Error de la petición3" });
+      if (!solDen)
+        return res.status(500).send({ mensaje: "Error al Denegar" });
 
-          return res.status(200).send({ Negacion: solDen });
-        }
-      );
-//   } else {
-//     return res.status(500).send({ ERROR: "Acceso solo para Admins" });
-//   }
+      return res.status(200).send({ Negacion: solDen });
+    }
+  );
+  //   } else {
+  //     return res.status(500).send({ ERROR: "Acceso solo para Admins" });
+  //   }
 }
 /////////////////////////////////////////////////////
 
@@ -478,36 +478,51 @@ function addCarpeta(req, res) {
 
 // Descargar Datos
 const descargarData = (req, res) => {
-  console.log("Aqui andamos");
   // var min = req.user;
 
   // if (min.rol != "Admin")
   //     return res.status(500).send({ ERROR: "Solo los administradores pueden descargar datos" });
 
-  let fileName = req.params.fileName;
-  console.log(fileName);
-  temporal.getObject(
-    { Bucket: process.env.BUCKET_REQUESTER, Key: fileName },
-    (err, file) => {
-      if (err) return res.send({ err });
+  var folder = req.body.folder;
+  var file = req.body.file;
 
-      res.send(file.Body);
-    }
-  )
+  let data;
+  if (folder != null) {
+    data = folder + '/' + file;
+  } else if (folder == null) {
+    data = file;
+  }
+
+  temporal.getObject({ Bucket: process.env.BUCKET_REQUESTER, Key: data }, (error, fileend) => {
+    fs.writeFile("temp/" + file, fileend.Body, "binary", (err) => {
+      if (err) return res.send({ err });
+      if (!file) return res.send({ fileend });
+
+      res.send("Exito");
+    })
+  })
 };
 
 //Eliminar Datos
 const eliminarData = (req, res) => {
   var min = req.user;
+  var folder = req.body.folder;
+  var file = req.body.file;
+
+  let data;
+  if (folder != null) {
+    data = folder + '/' + file;
+  } else if (folder == null) {
+    data = file;
+  }
 
   if (min.rol != "Admin")
     return res
       .status(500)
       .send({ ERROR: "Solo los administradores pueden eliminar datos" });
 
-  const fileName = req.params.fileName;
   temporal.deleteObject(
-    { Bucket: process.env.BUCKET, Key: fileName },
+    { Bucket: process.env.BUCKET, Key: data },
     (err, file) => {
       if (err) return res.send({ err });
 

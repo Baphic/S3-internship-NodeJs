@@ -40,9 +40,9 @@ api.post('/uploadDataBucket', upload.array('file'), aut.Auth, requester.uploadDa
 
 // Opciones del Administrador
 api.post('/addFolder', aut.Auth, admin.addCarpeta);
-api.delete("/eliminarData/:fileName", aut.Auth, admin.eliminarData);
-api.put('/approveRequest', aut.Auth,  admin.aprobarSolicitud);
-api.put('/denyRequest', aut.Auth,  admin.negarSolicitud);
+api.delete("/eliminarData", aut.Auth, admin.eliminarData);
+api.put('/approveRequest', aut.Auth, admin.aprobarSolicitud);
+api.put('/denyRequest', aut.Auth, admin.negarSolicitud);
 api.get("/downloadData", admin.descargarData);
 api.put('/newAdmin/:idReq', aut.Auth, admin.addAdmin);
 api.put('/oldRequester/:idAdm', aut.Auth, admin.removeAdmin);
