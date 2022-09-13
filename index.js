@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const app = require('./app');
 require('dotenv').config()
-const adminController = require('./src/controladores/Admin.controller');
+const adminController = require('./src/Controllers/Admin.controller');
 
 mongoose.Promise = global.Promise;
 mongoose.connect(process.env.DATABASE, { useNewUrlParser: true, useUnifiedTopology: true }).then(() => {
