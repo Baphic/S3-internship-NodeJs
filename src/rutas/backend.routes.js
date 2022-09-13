@@ -27,7 +27,7 @@ const upload = multer({
 
 // Opciones de Ambos
 api.post('/login', admin.Login);
-api.post('/registro', admin.Register);
+api.post('/registro', aut.Auth, admin.Register);
 
 
 // Opciones del Requester
@@ -41,9 +41,10 @@ api.post('/uploadDataBucket', upload.array('file'), aut.Auth, requester.uploadDa
 // Opciones del Administrador
 api.post('/addFolder', aut.Auth, admin.addCarpeta);
 api.delete("/eliminarData", aut.Auth, admin.eliminarData);
-api.put('/approveRequest', aut.Auth, admin.aprobarSolicitud);
-api.put('/denyRequest', aut.Auth, admin.negarSolicitud);
-api.get("/downloadData", admin.descargarData);
+api.put("/approveRequest/:folder/:file", admin.aprobarSolicitud);
+api.put("/denyRequest/:folder/:file",  admin.negarSolicitud);
+api.get("/downloadData/:folder/:file",aut.Auth,  admin.descargarData);
+api.delete('/eliminar/:file',admin.eliminar);
 api.put('/newAdmin/:idReq', aut.Auth, admin.addAdmin);
 api.put('/oldRequester/:idAdm', aut.Auth, admin.removeAdmin);
 
@@ -52,6 +53,5 @@ api.get('/solicitudesAprobadas', aut.Auth, admin.listAprobados);
 api.get('/solicitudesDenegadas', aut.Auth, admin.listDenegados);
 
 // Otros
-api.post('/reupload', admin.reuploadPrincipal)
 
 module.exports = api;
