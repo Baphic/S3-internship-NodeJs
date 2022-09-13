@@ -1,11 +1,9 @@
 require("dotenv").config();
-const express = require("express");
 const Usuario = require("../modelos/usuarios.model");
 const Solicitudes = require("../modelos/solicitudes.model");
 const bcrypt = require("bcrypt-nodejs");
 const jwt = require("../servicios/jwt.tokens");
 const fs = require("fs");
-const uuid = require("uuid").v4;
 const Amazon = require("aws-sdk");
 const temporal = new Amazon.S3({
   accessKeyId: process.env.ACCESS,
@@ -266,10 +264,8 @@ function removeAdmin(req, res) {
   }
 }
 
-const { Console } = require("console");
-
+// Aprobar una solicitud del requester
 function aprobarSolicitud(req, res) {
-  // var min = req.user;
   let folder = req.params.folder;
   let file = req.params.file;
 
@@ -281,7 +277,6 @@ function aprobarSolicitud(req, res) {
   }
   var fecha = new Date();
 
-  // if (min.rol == "Admin") {
   const status = "Aprobado";
   const UUID = data;
 
@@ -305,12 +300,9 @@ function aprobarSolicitud(req, res) {
       return res.send({ Inicio: solApr });
     }
   );
-  // } else {
-  //   return res.status(500).send({ ERROR: "Acceso solo para Admins" });
-  // }
 }
 
-////////////////////////////////////////////////////
+// Trasladar datos al bucket principal
 function reuploadPrincipalGet(file, data) {
   const bucket = process.env.BUCKET_REQUESTER;
 
@@ -319,11 +311,10 @@ function reuploadPrincipalGet(file, data) {
     Bucket: bucket,
     Key: path,
   };
-  //console.log(params)
 
   sThree.getObject(params, (error, object) => {
     fs.writeFile("temp/" + file, object.Body, "binary", (err) => {
-      if (err) console.log(err);
+      if (err) res.status(500).send({ error: "Ocurrio un error" });
 
       let params2 = {
         Bucket: process.env.BUCKET,
@@ -340,21 +331,6 @@ function reuploadPrincipalGet(file, data) {
     });
   });
 }
-
-// function reuploadPrincipal(file, path, res) {
-//   const bucket = process.env.BUCKET;
-
-//   fs.readFile("temp/" + file, (error, data) => {
-//     console.log(data)
-//     var params = {
-//       Bucket: bucket,
-//       Key: path,
-//       Body: data,
-//     };
-
-//     //console.log(data);
-//   });
-// }
 
 function reuploadPrincipalDelete(file, path, res) {
   const bucket = process.env.BUCKET_REQUESTER;
@@ -377,10 +353,9 @@ function reuploadPrincipalDelete(file, path, res) {
     });
   });
 }
-/////
 
+// Negar una solicitud del requester
 function negarSolicitud(req, res) {
-  // const min = req.user;
   let folder = req.params.folder;
   let file = req.params.file;
 
@@ -392,8 +367,6 @@ function negarSolicitud(req, res) {
   }
   var fecha = new Date();
   const bucket = process.env.BUCKET_REQUESTER;
-
-  //   if (min.rol == "Admin") {
 
   const status = "Denegado";
   var params = {
@@ -418,12 +391,9 @@ function negarSolicitud(req, res) {
       });
     }
   );
-  //   } else {
-  //     return res.status(500).send({ ERROR: "Acceso solo para Admins" });
-  //   }
 }
-/////////////////////////////////////////////////////
 
+// Listar las solicitudes del requester
 function listSolicitudes(req, res) {
   Solicitudes.find(
     { estado: { $regex: "Pendiente", $options: "i" } },
@@ -440,6 +410,7 @@ function listSolicitudes(req, res) {
   );
 }
 
+// Listar las solicitudes aprobadas
 function listAprobados(req, res) {
   Solicitudes.find(
     { estado: { $regex: "Aprobado", $options: "i" } },
@@ -456,6 +427,7 @@ function listAprobados(req, res) {
   );
 }
 
+// Listar las solicitudes denegadas
 function listDenegados(req, res) {
   Solicitudes.find(
     { estado: { $regex: "Denegado", $options: "i" } },
@@ -493,11 +465,6 @@ function addCarpeta(req, res) {
 
 // Descargar Datos
 const descargarData = (req, res) => {
-  // var min = req.user;
-
-  // if (min.rol != "Admin")
-  //     return res.status(500).send({ ERROR: "Solo los administradores pueden descargar datos" });
-
   let folder = req.params.folder;
   let file = req.params.file;
 
@@ -508,21 +475,13 @@ const descargarData = (req, res) => {
     data = file;
   }
 
-  // temporal.getObject({ Bucket: process.env.BUCKET, Key: data }, (err, file) => {
-  //   console.log(file)
-  //   if (err) return res.send({ err });
-  //   res.download(file.Body);
-  // });
-
   temporal.getObject(
     { Bucket: process.env.BUCKET_REQUESTER, Key: data },
     (error, fileend) => {
-      console.log(fileend);
+
       fs.writeFile("descargas/" + file, fileend.Body, "binary", (err) => {
         if (err) return res.send({ err });
         if (!file) return res.send({ fileend });
-
-        console.log(`./descargas/${file}`);
 
         res.download(`./descargas/${file}`);
       });
@@ -532,7 +491,6 @@ const descargarData = (req, res) => {
 
 const eliminar = (req, res) => {
   let file = req.params.file;
-  console.log("llegamos");
   fs.unlink("descargas/" + file, (error) => {
     if (error) {
       console.error(error);

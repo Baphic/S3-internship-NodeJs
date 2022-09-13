@@ -22,13 +22,12 @@ const upload = multer({
   limits: { fileSize: 1000000000, files: 20 },
 });
 
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
+
+// RUTAS
 
 // Opciones de Ambos
 api.post('/login', admin.Login);
 api.post('/registro', aut.Auth, admin.Register);
-
 
 // Opciones del Requester
 api.get("/listDataBucket", aut.Auth, requester.listData);
@@ -36,7 +35,6 @@ api.get("/listDataBucketTemporal", aut.Auth, requester.listDataTermporal);
 api.get("/listDataDirectorioBucket/:directorio", aut.Auth, requester.listDataDirectorio);
 api.get("/listDataDirectorioBucketTemporal", aut.Auth, requester.listDataDirectorioTemporal);
 api.post('/uploadDataBucket', upload.array('file'), aut.Auth, requester.uploadData);
-
 
 // Opciones del Administrador
 api.post('/addFolder', aut.Auth, admin.addCarpeta);
@@ -51,7 +49,5 @@ api.put('/oldRequester/:idAdm', aut.Auth, admin.removeAdmin);
 api.get('/solicitudes', aut.Auth, admin.listSolicitudes);
 api.get('/solicitudesAprobadas', aut.Auth, admin.listAprobados);
 api.get('/solicitudesDenegadas', aut.Auth, admin.listDenegados);
-
-// Otros
 
 module.exports = api;

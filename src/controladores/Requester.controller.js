@@ -15,9 +15,6 @@ const temporal = new Amazon.S3({
   secretAccessKey: process.env.SECRET,
 });
 
-const { S3Client, PutObjectCommand, ConditionFilterSensitiveLog } = require("@aws-sdk/client-s3");
-const express = require("express");
-const multer = require("multer");
 const uuid = require("uuid").v4;
 
 
@@ -26,8 +23,6 @@ const uploadData = async (req, res) => {
   let des = req.body.descrip
   let fol = req.body.folder
   try {
-    //console.log(req.user)
-    //console.log(des)
 
     const results = await s3Upload(req.files, req.user, des, fol);
 
@@ -37,12 +32,9 @@ const uploadData = async (req, res) => {
   }
 };
 
-
 // Subir datos al bucket temporal
 const s3Upload = async (files, user, des, fol) => {
   const s3 = new S3();
-
-  console.log(files)
 
   const params = files.map((file) => {
 
@@ -83,7 +75,6 @@ const s3Upload = async (files, user, des, fol) => {
   }
 };
 
-
 // Solicitud para subir los datos al directorio correspondiente
 function solicitud(user, uuid, name, descripcion, res) {
   var hoy = new Date();
@@ -102,33 +93,7 @@ function solicitud(user, uuid, name, descripcion, res) {
   });
 }
 
-
-// Actualizar el historial (Pendiente)
-function historial(user, razon, name, uuid, res) {
-  var hoy = new Date();
-  var uaio = user;
-  var newRegistro = new Solicitud();
-  /*
-  console.log(uaio + "USUARIO")
-  console.log(descripcion + "DESCRIP")
-  */
-  newRegistro.usuario = uaio;
-  newRegistro.fecha = hoy;
-  newRegistro.descripcion = razon;
-  newRegistro.nombre = name;
-  newRegistro.UUID = uuid;
-  newRegistro.estado = "Pendiente";
-
-  console.log(newRegistro.UUID)
-  newRegistro.save((error, registroGuardado) => {
-    if (error) return res.status(500).send({ mensaje: "Error de la petición" });
-    if (!registroGuardado) return res.status(500).send({ mensaje: "Error, no se agrego el registro" });
-
-  });
-}
-
-
-// Listar Datos
+// Listar Directorios
 function listData(req, res) {
 
   const min = req.user;
@@ -147,6 +112,7 @@ function listData(req, res) {
   });
 }
 
+// Listar Directorios Temporales
 const listDataTermporal = (req, res) => {
   const paramss3 = {
     Bucket: process.env.BUCKET_REQUESTER,
@@ -159,8 +125,8 @@ const listDataTermporal = (req, res) => {
   })
 }
 
+// Listar datos de Directorios
 const listDataDirectorio = (req, res) => {
-  //let parametros = req.body;
   var directorio = req.params.directorio;
   const paramss3 = {
     Bucket: process.env.BUCKET,
@@ -173,6 +139,7 @@ const listDataDirectorio = (req, res) => {
   })
 }
 
+// Listar datos de Directorios Temporales
 const listDataDirectorioTemporal = (req, res) => {
   let parametros = req.body;
   const paramss3 = {
@@ -187,10 +154,8 @@ const listDataDirectorioTemporal = (req, res) => {
 }
 
 
-
 module.exports = {
   listData,
-  historial,
   uploadData,
   listDataTermporal,
   listDataDirectorio,
