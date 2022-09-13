@@ -1,4 +1,5 @@
 require("dotenv").config();
+const express = require("express");
 const Usuario = require("../modelos/usuarios.model");
 const Solicitudes = require("../modelos/solicitudes.model");
 const bcrypt = require("bcrypt-nodejs");
@@ -66,12 +67,10 @@ function Login(req, res) {
                     .send({ mensaje: "Error en la petición2" });
                 if (verificacionPassword) {
                   if (parametros.Token === "true") {
-                    return res
-                      .status(200)
-                      .send({
-                        token: jwt.crearToken(usuarioEncontrado),
-                        infoUser: usuarioEncontrado,
-                      });
+                    return res.status(200).send({
+                      token: jwt.crearToken(usuarioEncontrado),
+                      infoUser: usuarioEncontrado,
+                    });
                   }
                 } else {
                   usuarioEncontrado.password = undefined;
@@ -82,11 +81,9 @@ function Login(req, res) {
               }
             );
           } else {
-            return res
-              .status(500)
-              .send({
-                mensaje: "Error, este usuario no se encuentra registrado",
-              });
+            return res.status(500).send({
+              mensaje: "Error, este usuario no se encuentra registrado",
+            });
           }
         }
       );
@@ -116,11 +113,9 @@ function Login(req, res) {
               }
             );
           } else {
-            return res
-              .status(500)
-              .send({
-                mensaje: "Error, este correo no se encuentra registrado",
-              });
+            return res.status(500).send({
+              mensaje: "Error, este correo no se encuentra registrado",
+            });
           }
         }
       );
@@ -138,13 +133,14 @@ function Register(req, res) {
     parametros.apellido &&
     parametros.usuario &&
     parametros.email &&
-    parametros.password
+    parametros.password &&
+    parametros.rol
   ) {
     usuarioModelo.nombre = parametros.nombre;
     usuarioModelo.apellido = parametros.apellido;
     usuarioModelo.email = parametros.email;
     usuarioModelo.usuario = parametros.usuario;
-    usuarioModelo.rol = "Requester";
+    usuarioModelo.rol = parametros.rol;
 
     Usuario.find(
       { usuario: parametros.usuario },
@@ -177,11 +173,9 @@ function Register(req, res) {
                           .status(500)
                           .send({ mensaje: "Error de la petición4" });
                       if (!usuarioGuardado)
-                        return res
-                          .status(500)
-                          .send({
-                            mensaje: "Error, no se registro ninguna Empresa",
-                          });
+                        return res.status(500).send({
+                          mensaje: "Error, no se registro ninguna Empresa",
+                        });
                       return res.status(200).send({ Usuario: usuarioGuardado });
                     });
                   }
@@ -275,48 +269,52 @@ function removeAdmin(req, res) {
 const { Console } = require("console");
 
 function aprobarSolicitud(req, res) {
-  var min = req.user;
-  var idSo = req.body.idSo;
+  // var min = req.user;
+  let folder = req.params.folder;
+  let file = req.params.file;
+
+  let data;
+  if (folder != null) {
+    data = folder + "/" + file;
+  } else if (folder == null) {
+    data = file;
+  }
   var fecha = new Date();
 
-  if (min.rol == "Admin") {
+  // if (min.rol == "Admin") {
+  const status = "Aprobado";
+  const UUID = data;
 
-    console.log(idSo)
+  Solicitudes.findOneAndUpdate(
+    { UUID: UUID },
+    { estado: status, fechaEstado: fecha },
+    { new: true },
+    (error, solApr) => {
+      if (error)
+        return res.status(500).send({ mesaje: "Error de la petición3" });
+      if (!solApr) return res.status(500).send({ mensaje: "Error al Aceptar" });
 
-    const status = "Aprobado";
-    const UUID = idSo;
-
-    Solicitudes.findOneAndUpdate(
-      { UUID: UUID },
-      { estado: status, fechaEstado: fecha },
-      { new: true },
-      (error, solApr) => {
-        if (error)
-          return res.status(500).send({ mesaje: "Error de la petición3" });
-        if (!solApr)
-          return res.status(500).send({ mensaje: "Error al Denegar" });
-
-        if (UUID.includes("/") == true) {
-          fs.mkdirSync("/" + UUID, { recursive: true });
-        } else if (UUID.includes == false) {
-          fs.mkdirSync(UUID, { recursive: true });
-        }
-
-        reuploadPrincipalGet(UUID);
-
-        return res.send({ Inicio: solApr });
+      if (UUID.includes("/") == true) {
+        fs.mkdirSync("/" + UUID, { recursive: true });
+      } else if (UUID.includes == false) {
+        fs.mkdirSync(UUID, { recursive: true });
       }
-    );
-  } else {
-    return res.status(500).send({ ERROR: "Acceso solo para Admins" });
-  }
+
+      reuploadPrincipalGet(file, data);
+
+      return res.send({ Inicio: solApr });
+    }
+  );
+  // } else {
+  //   return res.status(500).send({ ERROR: "Acceso solo para Admins" });
+  // }
 }
 
 ////////////////////////////////////////////////////
-function reuploadPrincipalGet(UUID, res) {
+function reuploadPrincipalGet(file, data) {
   const bucket = process.env.BUCKET_REQUESTER;
 
-  var path = UUID;
+  var path = data;
   var params = {
     Bucket: bucket,
     Key: path,
@@ -324,40 +322,44 @@ function reuploadPrincipalGet(UUID, res) {
   //console.log(params)
 
   sThree.getObject(params, (error, object) => {
-    fs.writeFile("temp/" + path, object.Body, "binary", (err) => {
+    fs.writeFile("temp/" + file, object.Body, "binary", (err) => {
       if (err) console.log(err);
 
-      reuploadPrincipal(path);
+      let params2 = {
+        Bucket: process.env.BUCKET,
+        Key: path,
+        Body: object.Body,
+      };
+      sThree.putObject(params2, (error, dataUpload) => {
+        if (error) res.status(500).send({ error: "Error en la petición3" });
+        if (!dataUpload) res.status(500).send({ error: "No se subio nada" });
+
+        reuploadPrincipalDelete(file, path);
+        return { 2: dataUpload.length };
+      });
     });
   });
 }
 
-function reuploadPrincipal(path, res) {
-  const bucket = process.env.BUCKET;
+// function reuploadPrincipal(file, path, res) {
+//   const bucket = process.env.BUCKET;
 
-  fs.readFile("temp/" + path, (error, data) => {
-    var params = {
-      Bucket: bucket,
-      Key: path,
-      Body: data,
-    };
-    //console.log(data);
+//   fs.readFile("temp/" + file, (error, data) => {
+//     console.log(data)
+//     var params = {
+//       Bucket: bucket,
+//       Key: path,
+//       Body: data,
+//     };
 
-    sThree.putObject(params, (error, dataUpload) => {
-      if (error) res.status(500).send({ error: "Error en la petición3" });
-      if (!dataUpload) res.status(500).send({ error: "No se subio nada" });
+//     //console.log(data);
+//   });
+// }
 
-      reuploadPrincipalDelete(path);
-
-      return { 2: dataUpload.length };
-    });
-  });
-}
-
-function reuploadPrincipalDelete(path, res) {
+function reuploadPrincipalDelete(file, path, res) {
   const bucket = process.env.BUCKET_REQUESTER;
 
-  fs.unlink("temp/" + path, (error) => {
+  fs.unlink("temp/" + file, (error) => {
     if (error) {
       console.error(error);
     }
@@ -378,27 +380,42 @@ function reuploadPrincipalDelete(path, res) {
 /////
 
 function negarSolicitud(req, res) {
-  const min = req.user;
-  var idSo = req.body.idSo;
+  // const min = req.user;
+  let folder = req.params.folder;
+  let file = req.params.file;
+
+  let data;
+  if (folder != null) {
+    data = folder + "/" + file;
+  } else if (folder == null) {
+    data = file;
+  }
   var fecha = new Date();
+  const bucket = process.env.BUCKET_REQUESTER;
 
   //   if (min.rol == "Admin") {
 
-  console.log(idSo)
-
   const status = "Denegado";
+  var params = {
+    Bucket: bucket,
+    Key: data,
+  };
 
   Solicitudes.findOneAndUpdate(
-    { UUID: idSo },
+    { UUID: data },
     { estado: status, fechaEstado: fecha },
     { new: true },
     (error, solDen) => {
       if (error)
         return res.status(500).send({ mesaje: "Error de la petición3" });
-      if (!solDen)
-        return res.status(500).send({ mensaje: "Error al Denegar" });
+      if (!solDen) return res.status(500).send({ mensaje: "Error al Denegar" });
 
-      return res.status(200).send({ Negacion: solDen });
+      sThree.deleteObject(params, (error, dataDelete) => {
+        if (error) res.status(500).send({ error: "Error en la petición3" });
+        if (!dataDelete) res.status(500).send({ error: "No se subio nada" });
+
+        return res.status(200).send({ Negacion: solDen });
+      });
     }
   );
   //   } else {
@@ -460,11 +477,9 @@ function addCarpeta(req, res) {
   var min = req.user;
 
   if (min.rol != "Admin")
-    return res
-      .status(500)
-      .send({
-        ERROR: "Solo los administradores pueden agregar un nuevo directorio",
-      });
+    return res.status(500).send({
+      ERROR: "Solo los administradores pueden agregar un nuevo directorio",
+    });
 
   const buck = process.env.BUCKET;
   const name = req.body.name + "/";
@@ -483,24 +498,46 @@ const descargarData = (req, res) => {
   // if (min.rol != "Admin")
   //     return res.status(500).send({ ERROR: "Solo los administradores pueden descargar datos" });
 
-  var folder = req.body.folder;
-  var file = req.body.file;
+  let folder = req.params.folder;
+  let file = req.params.file;
 
   let data;
   if (folder != null) {
-    data = folder + '/' + file;
+    data = folder + "/" + file;
   } else if (folder == null) {
     data = file;
   }
 
-  temporal.getObject({ Bucket: process.env.BUCKET_REQUESTER, Key: data }, (error, fileend) => {
-    fs.writeFile("temp/" + file, fileend.Body, "binary", (err) => {
-      if (err) return res.send({ err });
-      if (!file) return res.send({ fileend });
+  // temporal.getObject({ Bucket: process.env.BUCKET, Key: data }, (err, file) => {
+  //   console.log(file)
+  //   if (err) return res.send({ err });
+  //   res.download(file.Body);
+  // });
 
-      res.send("Exito");
-    })
-  })
+  temporal.getObject(
+    { Bucket: process.env.BUCKET_REQUESTER, Key: data },
+    (error, fileend) => {
+      console.log(fileend);
+      fs.writeFile("descargas/" + file, fileend.Body, "binary", (err) => {
+        if (err) return res.send({ err });
+        if (!file) return res.send({ fileend });
+
+        console.log(`./descargas/${file}`);
+
+        res.download(`./descargas/${file}`);
+      });
+    }
+  );
+};
+
+const eliminar = (req, res) => {
+  let file = req.params.file;
+  console.log("llegamos");
+  fs.unlink("descargas/" + file, (error) => {
+    if (error) {
+      console.error(error);
+    }
+  });
 };
 
 //Eliminar Datos
@@ -511,7 +548,7 @@ const eliminarData = (req, res) => {
 
   let data;
   if (folder != null) {
-    data = folder + '/' + file;
+    data = folder + "/" + file;
   } else if (folder == null) {
     data = file;
   }
@@ -539,7 +576,6 @@ module.exports = {
   removeAdmin,
   negarSolicitud,
   aprobarSolicitud,
-  reuploadPrincipal,
   reuploadPrincipalGet,
   reuploadPrincipalDelete,
   addCarpeta,
@@ -548,4 +584,5 @@ module.exports = {
   listSolicitudes,
   listAprobados,
   listDenegados,
+  eliminar,
 };
