@@ -1,11 +1,9 @@
 require("dotenv").config();
-const express = require("express");
 const user = require("../Models/users.model");
 const request = require("../Models/requets.model");
 const bcrypt = require("bcrypt-nodejs");
 const jwt = require("../Services/jwt.tokens");
 const fs = require("fs");
-const uuid = require("uuid").v4;
 const Amazon = require("aws-sdk");
 
 const temporal = new Amazon.S3({
@@ -19,94 +17,94 @@ const sThree = new Amazon.S3({
 
 // Creacion de Admin default
 function Admin(res) {
-  var adminModelo = new user();
-  adminModelo.nombre = "Back";
-  adminModelo.apellido = "End";
-  adminModelo.user = "ADMIN";
-  adminModelo.rol = "Admin";
+  var adminModel = new user();
+  adminModel.name = "Back";
+  adminModel.surname = "End";
+  adminModel.user = "ADMIN";
+  adminModel.rol = "Admin";
 
-  user.find({ rol: adminModelo.rol }, (error, findAdmin) => {
+  user.find({ rol: adminModel.rol }, (error, findAdmin) => {
     if (error)
-      return res.status(500).send({ mensaje: "Error de la petición1" });
+      return res.status(500).send({ message: "Error de la petición1" });
     if (findAdmin.length == 0)
       bcrypt.hash("ADMIN", null, null, (error, passwordEncript) => {
         if (error)
-          return res.status(500).send({ mensaje: "Error de la petición2" });
-        adminModelo.password = passwordEncript;
+          return res.status(500).send({ message: "Error de la petición2" });
+        adminModel.password = passwordEncript;
 
-        adminModelo.save((error, adminSave) => {
+        adminModel.save((error, adminSave) => {
           if (error)
-            return res.status(500).send({ mensaje: "Error de la petición3" });
+            return res.status(500).send({ message: "Error de la petición3" });
           if (!adminSave)
             return res
               .status(500)
-              .send({ mensaje: "Error, no se creó ningún Admin" });
+              .send({ message: "Error, no se creó ningún Admin" });
         });
       });
   });
 }
 
-// Login para los administradores y requesters
+// Login
 function Login(req, res) {
-  var parametros = req.body;
+  var parameters = req.body;
 
-  if ((parametros.user || parametros.email) && parametros.password) {
-    if (parametros.user) {
+  if ((parameters.user || parameters.email) && parameters.password) {
+    if (parameters.user) {
       user.findOne(
-        { user: parametros.user },
-        (error, userEncontrado) => {
+        { user: parameters.user },
+        (error, userFound) => {
           if (error)
-            return res.status(500).send({ mensaje: "Error en la petición1" });
-          if (userEncontrado) {
+            return res.status(500).send({ message: "Error en la petición1" });
+          if (userFound) {
             bcrypt.compare(
-              parametros.password,
-              userEncontrado.password,
-              (error, verificacionPassword) => {
+              parameters.password,
+              userFound.password,
+              (error, verificationPassword) => {
                 if (error)
                   return res
                     .status(500)
                     .send({ mensaje: "Error en la petición2" });
-                if (verificacionPassword) {
-                  if (parametros.Token === "true") {
+                if (verificationPassword) {
+                  if (parameters.Token === "true") {
                     return res.status(200).send({
-                      token: jwt.crearToken(userEncontrado),
-                      infoUser: userEncontrado,
+                      token: jwt.crearToken(userFound),
+                      infoUser: userFound,
                     });
                   }
                 } else {
-                  userEncontrado.password = undefined;
+                  userFound.password = undefined;
                   return res
                     .status(500)
-                    .send({ mensaje: "Contraseña y/o user incorrecto" });
+                    .send({ message: "Contraseña y/o user incorrecto" });
                 }
               }
             );
           } else {
             return res.status(500).send({
-              mensaje: "Error, este user no se encuentra registrado",
+              message: "Error, este user no se encuentra registrado",
             });
           }
         }
       );
-    } else if (parametros.email) {
+    } else if (parameters.email) {
       user.findOne(
-        { email: parametros.email },
-        (error, userEncontrado) => {
+        { email: parameters.email },
+        (error, userFound) => {
           if (error)
-            return res.status(500).send({ mensaje: "Error en la petición" });
-          if (userEncontrado) {
+            return res.status(500).send({ message: "Error en la petición" });
+          if (userFound) {
             bcrypt.compare(
-              parametros.password,
-              userEncontrado.password,
-              (error, verificacionPassword) => {
-                if (verificacionPassword) {
-                  if (parametros.Token === "true") {
+              parameters.password,
+              userFound.password,
+              (error, verificationPassword) => {
+                if (verificationPassword) {
+                  if (parameters.Token === "true") {
                     return res
                       .status(200)
-                      .send({ token: jwt.crearToken(userEncontrado) });
+                      .send({ token: jwt.crearToken(userFound) });
                   }
                 } else {
-                  userEncontrado.password = undefined;
+                  userFound.password = undefined;
                   return res
                     .status(200)
                     .send({ error: "Contraseña y/o email incorrecto" });
@@ -115,7 +113,7 @@ function Login(req, res) {
             );
           } else {
             return res.status(500).send({
-              mensaje: "Error, este correo no se encuentra registrado",
+              message: "Error, este correo no se encuentra registrado",
             });
           }
         }
@@ -124,74 +122,74 @@ function Login(req, res) {
   }
 }
 
-// Registro requesters
+// Registro
 function Register(req, res) {
-  var parametros = req.body;
-  var userModelo = new user();
+  var parameters = req.body;
+  var userModel = new user();
 
   if (
-    parametros.nombre &&
-    parametros.apellido &&
-    parametros.user &&
-    parametros.email &&
-    parametros.password &&
-    parametros.rol
+    parameters.name &&
+    parameters.surname &&
+    parameters.user &&
+    parameters.email &&
+    parameters.password &&
+    parameters.rol
   ) {
-    userModelo.nombre = parametros.nombre;
-    userModelo.apellido = parametros.apellido;
-    userModelo.email = parametros.email;
-    userModelo.user = parametros.user;
-    userModelo.rol = parametros.rol;
+    userModel.name = parameters.name;
+    userModel.surname = parameters.surname;
+    userModel.email = parameters.email;
+    userModel.user = parameters.user;
+    userModel.rol = parameters.rol;
 
     user.find(
-      { user: parametros.user },
-      (error, userEncontrado) => {
+      { user: parameters.user },
+      (error, userFound) => {
         if (error)
-          return res.status(500).send({ mensaje: "Error de la petición1" });
-        if (userEncontrado.length == 0) {
+          return res.status(500).send({ message: "Error de la petición1" });
+        if (userFound.length == 0) {
           user.find(
-            { email: parametros.email },
-            (error, userEncontrado2) => {
+            { email: parameters.email },
+            (error, userFound2) => {
               if (error)
                 return res
                   .status(500)
-                  .send({ mensaje: "Error de la petición2" });
-              if (userEncontrado2.length == 0) {
+                  .send({ message: "Error de la petición2" });
+              if (userFound2.length == 0) {
                 bcrypt.hash(
-                  parametros.password,
+                  parameters.password,
                   null,
                   null,
-                  (error, passwordEncriptada) => {
+                  (error, encryptedPassword) => {
                     if (error)
                       return res
                         .status(500)
-                        .send({ mensaje: "Error de la petición3" });
-                    userModelo.password = passwordEncriptada;
+                        .send({ message: "Error de la petición3" });
+                    userModel.password = encryptedPassword;
 
-                    userModelo.save((error, userGuardado) => {
+                    userModel.save((error, userSaved) => {
                       if (error)
                         return res
                           .status(500)
-                          .send({ mensaje: "Error de la petición4" });
-                      if (!userGuardado)
+                          .send({ message: "Error de la petición4" });
+                      if (!userSaved)
                         return res.status(500).send({
-                          mensaje: "Error, no se registro ninguna Empresa",
+                          message: "Error, no se registro correctamente",
                         });
-                      return res.status(200).send({ user: userGuardado });
+                      return res.status(200).send({ user: userSaved });
                     });
                   }
                 );
               } else {
                 return res
                   .status(500)
-                  .send({ mensaje: "Este Correo ya se encuentra registrado" });
+                  .send({ message: "Este Correo ya se encuentra registrado" });
               }
             }
           );
         } else {
           return res
             .status(500)
-            .send({ mensaje: "Este user ya se encuentra en uso" });
+            .send({ message: "Este user ya se encuentra en uso" });
         }
       }
     );
@@ -220,16 +218,16 @@ function addAdmin(req, res) {
         { new: true },
         (error, reqUpd) => {
           if (error)
-            return res.status(500).send({ mesaje: "Error de la petición2" });
+            return res.status(500).send({ message: "Error de la petición2" });
           if (!reqUpd)
-            return res.status(500).send({ mensaje: "Error al registrar" });
+            return res.status(500).send({ message: "Error al registrar" });
 
           return res.status(200).send({ Admin: reqUpd });
         }
       );
     });
   } else {
-    return res.status(403).send({ ERROR: "Acceso solo para Admins" });
+    return res.status(403).send({ error: "Acceso solo para Admins" });
   }
 }
 
@@ -254,26 +252,24 @@ function removeAdmin(req, res) {
         { new: true },
         (error, admUpd) => {
           if (error)
-            return res.status(500).send({ mesaje: "Error de la petición2" });
+            return res.status(500).send({ message: "Error de la petición2" });
           if (!admUpd)
-            return res.status(500).send({ mensaje: "Error al degradar" });
+            return res.status(500).send({ message: "Error al degradar" });
 
           return res.status(200).send({ requester: admUpd });
         }
       );
     });
   } else {
-    return res.status(403).send({ ERROR: "Acceso solo para Admins" });
+    return res.status(403).send({ error: "Acceso solo para Admins" });
   }
 }
 
-const { Console } = require("console");
-
+// Aprobar solicitudes
 function approveRequest(req, res) {
-  // var min = req.user;
   var folder = req.params.folder;
   var file = req.params.file;
-  var fecha = new Date();
+  var date = new Date();
 
   let data;
   if (folder != null) {
@@ -282,18 +278,17 @@ function approveRequest(req, res) {
     data = file;
   }
 
-  // if (min.rol == "Admin") {
   const status = "Aprobado";
   const UUID = data;
 
   request.findOneAndUpdate(
     { UUID: UUID },
-    { estado: status, fechaEstado: fecha },
+    { status: status, dateStatus: date },
     { new: true },
     (error, solApr) => {
       if (error)
-        return res.status(500).send({ mesaje: "Error de la petición3" });
-      if (!solApr) return res.status(500).send({ mensaje: "Error al Aceptar" });
+        return res.status(500).send({ message: "Error de la petición3" });
+      if (!solApr) return res.status(500).send({ message: "Error al Aceptar" });
 
       if (UUID.includes("/") == true) {
         fs.mkdirSync("/" + UUID, { recursive: true });
@@ -303,15 +298,12 @@ function approveRequest(req, res) {
 
       reuploadPrincipalGet(file, data);
 
-      return res.send({ Inicio: solApr });
+      return res.send({ result: solApr });
     }
   );
-  // } else {
-  //   return res.status(403).send({ ERROR: "Acceso solo para Admins" });
-  // }
 }
 
-////////////////////////////////////////////////////
+// Proceso despues de la aprobacion
 function reuploadPrincipalGet(file, data) {
   var bucket = process.env.BUCKET_REQUESTER;
 
@@ -320,11 +312,10 @@ function reuploadPrincipalGet(file, data) {
     Bucket: bucket,
     Key: path,
   };
-  //console.log(params)
 
   sThree.getObject(params, (error, object) => {
     fs.writeFile("temp/" + file, object.Body, "binary", (err) => {
-      if (err) console.log(err);
+      if (err) res.status(500).send({ error: err });
 
       const params2 = {
         Bucket: process.env.BUCKET,
@@ -342,27 +333,13 @@ function reuploadPrincipalGet(file, data) {
   });
 }
 
-// function reuploadPrincipal(file, path, res) {
-//   const bucket = process.env.BUCKET;
-
-//   fs.readFile("temp/" + file, (error, data) => {
-//     console.log(data)
-//     var params = {
-//       Bucket: bucket,
-//       Key: path,
-//       Body: data,
-//     };
-
-//     //console.log(data);
-//   });
-// }
-
+// Proceso despues de la denegacion
 function reuploadPrincipalDelete(file, path, res) {
   var bucket = process.env.BUCKET_REQUESTER;
 
   fs.unlink("temp/" + file, (error) => {
     if (error) {
-      console.error(error);
+      res.status(500).send({ error: error });
     }
 
     const params = {
@@ -378,10 +355,9 @@ function reuploadPrincipalDelete(file, path, res) {
     });
   });
 }
-/////
 
+// Denegar solicitudes
 function denyRequest(req, res) {
-  // const min = req.user;
   var folder = req.params.folder;
   var file = req.params.file;
 
@@ -391,10 +367,8 @@ function denyRequest(req, res) {
   } else if (folder == null) {
     data = file;
   }
-  var fecha = new Date();
+  var date = new Date();
   var bucket = process.env.BUCKET_REQUESTER;
-
-  //   if (min.rol == "Admin") {
 
   const status = "Denegado";
   var params = {
@@ -404,71 +378,70 @@ function denyRequest(req, res) {
 
   request.findOneAndUpdate(
     { UUID: data },
-    { estado: status, fechaEstado: fecha },
+    { status: status, dateStatus: date },
     { new: true },
     (error, solDen) => {
       if (error)
-        return res.status(500).send({ mesaje: "Error de la petición3" });
-      if (!solDen) return res.status(500).send({ mensaje: "Error al Denegar" });
+        return res.status(500).send({ message: "Error de la petición3" });
+      if (!solDen) return res.status(500).send({ message: "Error al Denegar" });
 
       sThree.deleteObject(params, (error, dataDelete) => {
         if (error) res.status(500).send({ error: "Error en la petición3" });
         if (!dataDelete) res.status(500).send({ error: "No se subio nada" });
 
-        return res.status(200).send({ Negacion: solDen });
+        return res.status(200).send({ denial: solDen });
       });
     }
   );
-  //   } else {
-  //     return res.status(403).send({ ERROR: "Acceso solo para Admins" });
-  //   }
 }
-/////////////////////////////////////////////////////
 
+// Listar solicitudes
 function listRequests(req, res) {
   request.find(
-    { estado: { $regex: "Pendiente", $options: "i" } },
+    { status: { $regex: "Pendiente", $options: "i" } },
     (error, allSo) => {
       if (error)
-        return res.status(500).send({ mensaje: "Error de la petición" });
+        return res.status(500).send({ message: "Error de la petición" });
       if (!allSo)
         return res
           .status(500)
-          .send({ mensaje: "Error, no se encontraron request" });
+          .send({ message: "Error, no se encontraron request" });
 
-      return res.status(200).send({ historialRequester: allSo });
+      return res.status(200).send({ requests: allSo });
     }
   );
 }
 
-function listApprove(req, res) {
+// Listar solicitudes aprobadas
+function listApprovedRequests(req, res) {
   request.find(
-    { estado: { $regex: "Aprobado", $options: "i" } },
+    { status: { $regex: "Aprobado", $options: "i" } },
     (error, allSo) => {
       if (error)
-        return res.status(500).send({ mensaje: "Error de la petición" });
+        return res.status(500).send({ message: "Error de la petición" });
       if (!allSo)
         return res
           .status(500)
-          .send({ mensaje: "Error, no se encontraron request" });
+          .send({ message: "Error, no se encontraron request" });
 
-      return res.status(200).send({ historialRequester: allSo });
+      return res.status(200).send({ requests: allSo });
     }
   );
 }
 
-function listDeny(req, res) {
+// Listar solicitudes denegadas
+function listDeniedRequests(req, res) {
   request.find(
-    { estado: { $regex: "Denegado", $options: "i" } },
+    { status: { $regex: "Denegado", $options: "i" } },
     (error, allSo) => {
       if (error)
-        return res.status(500).send({ mensaje: "Error de la petición" });
+        return res.status(500).send({ message: "Error de la petición" });
       if (!allSo)
         return res
           .status(500)
-          .send({ mensaje: "Error, no se encontraron request" });
+          .send({ message: "Error, no se encontraron request" });
 
-      return res.status(200).send({ historialRequester: allSo });
+      return res.status(200).send({ requests: allSo });
     }
   );
 }
@@ -479,25 +452,21 @@ function addFolder(req, res) {
 
   if (min.rol != "Admin")
     return res.status(403).send({
-      ERROR: "Solo los administradores pueden agregar un nuevo directorio",
+      error: "Solo los administradores pueden agregar un nuevo directorio",
     });
 
   const buck = process.env.BUCKET;
   const name = req.body.name + "/";
-  var Objeto = { Bucket: buck, Key: name };
+  var Object = { Bucket: buck, Key: name };
 
-  temporal.putObject(Objeto, (error, fol) => {
+  temporal.putObject(Object, (error, fol) => {
     if (error) return res.send({ error: error });
-    return res.send({ Folder: fol });
+    return res.send({ message: "Directorio creado correctamente" });
   });
 }
 
 // Descargar Datos
-const dowloadData = (req, res) => {
-  // var min = req.user;
-
-  // if (min.rol != "Admin")
-  //     return res.status(403).send({ ERROR: "Solo los administradores pueden descargar datos" });
+const downloadData = (req, res) => {
 
   var folder = req.params.folder;
   var file = req.params.file;
@@ -509,22 +478,12 @@ const dowloadData = (req, res) => {
     data = file;
   }
 
-  // temporal.getObject({ Bucket: process.env.BUCKET, Key: data }, (err, file) => {
-  //   console.log(file)
-  //   if (err) return res.send({ err });
-  //   res.download(file.Body);
-  // });
-
   temporal.getObject(
     { Bucket: process.env.BUCKET_REQUESTER, Key: data },
     (error, fileend) => {
-      console.log(fileend);
       fs.writeFile("descargas/" + file, fileend.Body, "binary", (err) => {
         if (err) return res.send({ err });
         if (!file) return res.send({ fileend });
-
-        console.log(`./descargas/${file}`);
-
         res.download(`./descargas/${file}`);
       });
     }
@@ -533,15 +492,14 @@ const dowloadData = (req, res) => {
 
 const deletee = (req, res) => {
   var file = req.params.file;
-  console.log("llegamos");
   fs.unlink("descargas/" + file, (error) => {
     if (error) {
-      console.error(error);
+      return res.status(500).send({ error: error });
     }
   });
 };
 
-//Eliminar Datos
+// Eliminar Datos
 const deleteData = (req, res) => {
   var min = req.user;
   var folder = req.body.folder;
@@ -557,7 +515,7 @@ const deleteData = (req, res) => {
   if (min.rol != "Admin")
     return res
       .status(403)
-      .send({ ERROR: "Solo los administradores pueden eliminar datos" });
+      .send({ error: "Solo los administradores pueden eliminar datos" });
 
   temporal.deleteObject(
     { Bucket: process.env.BUCKET, Key: data },
@@ -580,10 +538,10 @@ module.exports = {
   reuploadPrincipalGet,
   reuploadPrincipalDelete,
   addFolder,
-  dowloadData,
+  downloadData,
   deleteData,
   listRequests,
-  listApprove,
-  listDeny,
+  listApprovedRequests,
+  listDeniedRequests,
   deletee,
 };

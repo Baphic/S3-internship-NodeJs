@@ -5,7 +5,7 @@ const secret = "clave_";
 exports.crearToken = function (back) {
     let payload = {
         sub: back._id,
-        usuario: back.usuario,
+        user: back.user,
         rol: back.rol,
         iat: moment().unix(),
         exp: moment().utc().day(7, 'days').unix()

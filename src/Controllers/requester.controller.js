@@ -15,34 +15,25 @@ const temporal = new Amazon.S3({
   secretAccessKey: process.env.SECRET,
 });
 
-const { S3Client, PutObjectCommand, ConditionFilterSensitiveLog } = require("@aws-sdk/client-s3");
-const express = require("express");
-const multer = require("multer");
 const uuid = require("uuid").v4;
-
 
 // Agregar Datos a S3
 const uploadData = async (req, res) => {
   var des = req.body.descrip;
   var fol = req.body.folder;
   try {
-    //console.log(req.user)
-    //console.log(des)
 
     const results = await s3Upload(req.files, req.user, des, fol);
 
     return res.json({ status: "success" });
   } catch (err) {
-    console.log(err)
+    return res.status(500).send({ message: "Error en la peticion"});
   }
 };
-
 
 // Subir datos al bucket temporal
 const s3Upload = async (files, user, des, fol) => {
   var s3 = new S3();
-
-  console.log(files)
 
   const params = files.map((file) => {
 
@@ -62,11 +53,11 @@ const s3Upload = async (files, user, des, fol) => {
       K = `${uuid()}`
     }
 
-    const descripcion = des;
+    const description = des;
     const _id = K;
     const name = file.originalname;
 
-    requests(user.usuario, _id, name, descripcion);
+    requests(user.user, _id, name, description);
 
     return {
       Bucket: bucket,
@@ -76,118 +67,93 @@ const s3Upload = async (files, user, des, fol) => {
   });
 
   try {
-    console.log(params)
     return await Promise.all(params.map((param) => s3.upload(param).promise()));
   } catch (err) {
-    console.log(err);
+    return res.status(500).send({message: "Error en la peticion"});
   }
 };
 
+// Request para subir los datos al directorio correspondiente
+function requests(user, uuid, name, description, res) {
+  var today = new Date();
+  var requestModel = new request();
 
-// request para subir los datos al directorio correspondiente
-function requests(user, uuid, name, descripcion, res) {
-  var hoy = new Date();
-  var request = new request();
+  requestModel.user = user;
+  requestModel.date = today;
+  requestModel.description = description;
+  requestModel.name = name;
+  requestModel.UUID = uuid;
+  requestModel.status = "Pendiente";
 
-  request.usuario = user;
-  request.fecha = hoy;
-  request.descripcion = descripcion;
-  request.nombre = name;
-  request.UUID = uuid;
-  request.estado = "Pendiente";
-
-  request.save((error, requestGuardada) => {
-    if (error) return res.status(500).send({ mensaje: "Error de la petición" });
-    if (!requestGuardada) return res.status(500).send({ mensaje: "Error, no se puedo hacer la request para subir los archivos." });
+  requestModel.save((error, savedRequest) => {
+    if (error) return res.status(500).send({ message: "Error de la petición" });
+    if (!savedRequest) return res.status(500).send({ message: "Error, no se puedo hacer la request para subir los archivos." });
   });
 }
 
-// Actualizar el historial (Pendiente)
-function record(user, razon, name, uuid, res) {
-  var hoy = new Date();
-  var uaio = user;
-  var newRegistro = new request();
-  /*
-  console.log(uaio + "USUARIO")
-  console.log(descripcion + "DESCRIP")
-  */
-  newRegistro.usuario = uaio;
-  newRegistro.fecha = hoy;
-  newRegistro.descripcion = razon;
-  newRegistro.nombre = name;
-  newRegistro.UUID = uuid;
-  newRegistro.estado = "Pendiente";
-
-  console.log(newRegistro.UUID)
-  newRegistro.save((error, registroGuardado) => {
-    if (error) return res.status(500).send({ mensaje: "Error de la petición" });
-    if (!registroGuardado) return res.status(500).send({ mensaje: "Error, no se agrego el registro" });
-
-  });
-}
-
-// Listar Datos
+// Listar directorios
 function listData(req, res) {
   var min = req.user;
 
   if (min.rol != "Requester")
-  return res.status(403).send({mensaje:'Solo el requester puede listar los directorios'})
+  return res.status(403).send({message:'Solo el requester puede listar los directorios'});
 
   const paramss3 = {
     Bucket: process.env.BUCKET,
     Delimiter: '/'
   }
 
-  temporal.listObjectsV2(paramss3, (error, archivos) => {
+  temporal.listObjectsV2(paramss3, (error, data) => {
     if (error) return res.send({ error: error });
-    return res.send({ Data: archivos.CommonPrefixes });
+    return res.send({ Data: data.CommonPrefixes });
   });
 }
 
+// Listar directorios temporales
 const listDataTemporal = (req, res) => {
   const paramss3 = {
     Bucket: process.env.BUCKET_REQUESTER,
     Delimiter: '/'
   }
 
-  temporal.listObjectsV2(paramss3, (error, archivos) => {
+  temporal.listObjectsV2(paramss3, (error, data) => {
     if (error) return res.send({ error: error });
-    return res.send({ Data: archivos.CommonPrefixes });
+    return res.send({ Data: data.CommonPrefixes });
   })
 }
 
-const listDataDirectorio = (req, res) => {
-  //let parametros = req.body;
-  var directorio = req.params.directorio;
+// Listar datos de directorios
+const listDataDirectory = (req, res) => {
+  var directory = req.params.directory;
   const paramss3 = {
     Bucket: process.env.BUCKET,
-    StartAfter: directorio + "/",
-    Prefix: directorio + "/"
+    StartAfter: directory + "/",
+    Prefix: directory + "/"
   }
-  temporal.listObjectsV2(paramss3, (error, archivos) => {
+  temporal.listObjectsV2(paramss3, (error, data) => {
     if (error) return res.send({ error: error });
-    return res.send({ Data: archivos.Contents });
+    return res.send({ Data: data.Contents });
   })
 }
 
-const listDataDirectorioTemporal = (req, res) => {
-  var parametros = req.body;
+// Listar datos de directorios temporales
+const listDataDirectoryTemporal = (req, res) => {
+  var parameters = req.body;
   const paramss3 = {
     Bucket: process.env.BUCKET_REQUESTER,
-    StartAfter: parametros.directorio,
-    Prefix: parametros.directorio
+    StartAfter: parameters.directorio,
+    Prefix: parameters.directorio
   }
-  temporal.listObjectsV2(paramss3, (error, archivos) => {
+  temporal.listObjectsV2(paramss3, (error, data) => {
     if (error) return res.send({ error: error });
-    return res.send({ Data: archivos.Contents });
+    return res.send({ Data: data.Contents });
   })
 }
 
 module.exports = {
   listData,
-  record,
   uploadData,
   listDataTemporal,
-  listDataDirectorio,
-  listDataDirectorioTemporal
+  listDataDirectory,
+  listDataDirectoryTemporal
 };

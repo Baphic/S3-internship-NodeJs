@@ -2,12 +2,12 @@ const mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 var requestsSchema = Schema({
-    usuario: String,
-    fecha: Date,
-    descripcion: String,
-    nombre: String,
+    user: String,
+    date: Date,
+    description: String,
+    name: String,
     UUID: String,
-    estado: String,
-    fechaEstado: Date
+    status: String,
+    dateStatus: Date
 });
 module.exports = mongoose.model('requests', requestsSchema);
