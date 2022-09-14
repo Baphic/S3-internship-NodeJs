@@ -48,7 +48,7 @@ const s3Upload = async (files, user, des, fol) => {
 
     let K;
     if (fol != null) {
-      K = `${fol + "/" + uuid() + '.' + ext}`
+      K = `${fol + uuid() + '.' + ext}`
     } else if (fol == null) {
       K = `${uuid()}`
     }

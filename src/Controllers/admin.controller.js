@@ -482,7 +482,6 @@ const downloadData = (req, res) => {
   temporal.getObject(
     { Bucket: process.env.BUCKET_REQUESTER, Key: data }, (error, fileend) => {
       if (error) { return res.status(500).send({ error: error }); }
-      console.log(fileend)
       const params = {
         Bucket: process.env.BUCKET_REQUESTER,
         Key: data,
@@ -492,7 +491,6 @@ const downloadData = (req, res) => {
       sThree.getSignedUrl("getObject", params, (error, dowload) => {
         if (error) { return res.status(500).send({ error: error }); }
 
-        console.log(dowload)
         return res.status(200).send({ dowload });
       })
     });
