@@ -27,7 +27,7 @@ const uploadData = async (req, res) => {
 
     return res.json({ status: "success" });
   } catch (err) {
-    return res.status(500).send({ message: "Error en la peticion"});
+    return res.status(500).send({ message: "Error en la peticion" });
   }
 };
 
@@ -48,7 +48,7 @@ const s3Upload = async (files, user, des, fol) => {
 
     let K;
     if (fol != null) {
-      K = `${fol + uuid()+'.'+ext}`
+      K = `${fol + "/" + uuid() + '.' + ext}`
     } else if (fol == null) {
       K = `${uuid()}`
     }
@@ -69,7 +69,7 @@ const s3Upload = async (files, user, des, fol) => {
   try {
     return await Promise.all(params.map((param) => s3.upload(param).promise()));
   } catch (err) {
-    return res.status(500).send({message: "Error en la peticion"});
+    return res.status(500).send({ message: "Error en la peticion" });
   }
 };
 
@@ -96,7 +96,7 @@ function listData(req, res) {
   var min = req.user;
 
   if (min.rol != "Requester")
-  return res.status(403).send({message:'Solo el requester puede listar los directorios'});
+    return res.status(403).send({ message: 'Solo el requester puede listar los directorios' });
 
   const paramss3 = {
     Bucket: process.env.BUCKET,

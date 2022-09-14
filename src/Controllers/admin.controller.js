@@ -1,10 +1,12 @@
 require("dotenv").config();
 const user = require("../Models/users.model");
 const request = require("../Models/requets.model");
+
 const bcrypt = require("bcrypt-nodejs");
 const jwt = require("../Services/jwt.tokens");
 const fs = require("fs");
 const Amazon = require("aws-sdk");
+
 
 const temporal = new Amazon.S3({
   accessKeyId: process.env.ACCESS,
@@ -13,6 +15,8 @@ const temporal = new Amazon.S3({
 const sThree = new Amazon.S3({
   accessKeyId: process.env.ACCESS,
   secretAccessKey: process.env.SECRET,
+  apiVersion:'2006-03-01',
+  signatureVersion: 'v4'
 });
 
 // Creacion de Admin default
@@ -296,7 +300,14 @@ function approveRequest(req, res) {
         fs.mkdirSync(UUID, { recursive: true });
       }
 
-      reuploadPrincipalGet(file, data);
+      let name;
+      if (folder != null) {
+        name = folder + "/" + solApr.name;
+      } else if (folder == null) {
+        name = solApr.name;
+      }
+
+      reuploadPrincipalGet(file, data, name);
 
       return res.send({ result: solApr });
     }
@@ -304,7 +315,7 @@ function approveRequest(req, res) {
 }
 
 // Proceso despues de la aprobacion
-function reuploadPrincipalGet(file, data) {
+function reuploadPrincipalGet(file, data, name) {
   var bucket = process.env.BUCKET_REQUESTER;
 
   var path = data;
@@ -314,21 +325,17 @@ function reuploadPrincipalGet(file, data) {
   };
 
   sThree.getObject(params, (error, object) => {
-    fs.writeFile("temp/" + file, object.Body, "binary", (err) => {
-      if (err) res.status(500).send({ error: err });
+    const params2 = {
+      Bucket: process.env.BUCKET,
+      Key: name,
+      Body: object.Body,
+    };
+    sThree.putObject(params2, (error, dataUpload) => {
+      if (error) res.status(500).send({ error: "Error en la petición3" });
+      if (!dataUpload) res.status(500).send({ error: "No se subio nada" });
 
-      const params2 = {
-        Bucket: process.env.BUCKET,
-        Key: path,
-        Body: object.Body,
-      };
-      sThree.putObject(params2, (error, dataUpload) => {
-        if (error) res.status(500).send({ error: "Error en la petición3" });
-        if (!dataUpload) res.status(500).send({ error: "No se subio nada" });
-
-        reuploadPrincipalDelete(file, path);
-        return { 2: dataUpload.length };
-      });
+      reuploadPrincipalDelete(file, path);
+      return { 2: dataUpload.length };
     });
   });
 }
@@ -337,22 +344,16 @@ function reuploadPrincipalGet(file, data) {
 function reuploadPrincipalDelete(file, path, res) {
   var bucket = process.env.BUCKET_REQUESTER;
 
-  fs.unlink("temp/" + file, (error) => {
-    if (error) {
-      res.status(500).send({ error: error });
-    }
+  const params = {
+    Bucket: bucket,
+    Key: path,
+  };
 
-    const params = {
-      Bucket: bucket,
-      Key: path,
-    };
+  sThree.deleteObject(params, (error, dataDelete) => {
+    if (error) res.status(500).send({ error: "Error en la petición3" });
+    if (!dataDelete) res.status(500).send({ error: "No se subio nada" });
 
-    sThree.deleteObject(params, (error, dataDelete) => {
-      if (error) res.status(500).send({ error: "Error en la petición3" });
-      if (!dataDelete) res.status(500).send({ error: "No se subio nada" });
-
-      return { conclusion: "funciona" };
-    });
+    return { conclusion: "funciona" };
   });
 }
 
@@ -479,15 +480,22 @@ const downloadData = (req, res) => {
   }
 
   temporal.getObject(
-    { Bucket: process.env.BUCKET_REQUESTER, Key: data },
-    (error, fileend) => {
-      fs.writeFile("descargas/" + file, fileend.Body, "binary", (err) => {
-        if (err) return res.send({ err });
-        if (!file) return res.send({ fileend });
-        res.download(`./descargas/${file}`);
-      });
-    }
-  );
+    { Bucket: process.env.BUCKET_REQUESTER, Key: data }, (error, fileend) => {
+      if (error) { return res.status(500).send({ error: error }); }
+      console.log(fileend)
+      const params = {
+        Bucket: process.env.BUCKET_REQUESTER,
+        Key: data,
+        Expires: 3600
+      }
+
+      sThree.getSignedUrl("getObject", params, (error, dowload) => {
+        if (error) { return res.status(500).send({ error: error }); }
+
+        console.log(dowload)
+        return res.status(200).send({ dowload });
+      })
+    });
 };
 
 const deletee = (req, res) => {
