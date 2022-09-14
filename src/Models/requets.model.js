@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
-var SolicitudSchema = Schema({
+var requestsSchema = Schema({
     usuario: String,
     fecha: Date,
     descripcion: String,
@@ -10,4 +10,4 @@ var SolicitudSchema = Schema({
     estado: String,
     fechaEstado: Date
 });
-module.exports = mongoose.model('solicitudes', SolicitudSchema);
+module.exports = mongoose.model('requests', requestsSchema);
