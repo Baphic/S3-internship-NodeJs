@@ -8,7 +8,6 @@ mongoose.connect(process.env.DATABASE, { useNewUrlParser: true, useUnifiedTopolo
 
     app.listen(process.env.PORT || 7778, function () {
         adminController.Admin("", "");
-        console.log("Conexión establecida");
     })
 
 }).catch(error => console.log(error));

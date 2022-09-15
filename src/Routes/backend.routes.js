@@ -42,7 +42,6 @@ api.get("/data/:folder/:file", aut.Auth, admin.downloadData);
 api.delete('/file/:file', aut.Auth, admin.deletee);
 api.put('/newAdmin/:idReq', aut.Auth, admin.addAdmin);
 api.put('/oldRequester/:idAdm', aut.Auth, admin.removeAdmin);
-
 api.get('/requests', aut.Auth, admin.listRequests);
 api.get('/approvedRequests', aut.Auth, admin.listApprovedRequests);
 api.get('/deniedRequests', aut.Auth, admin.listDeniedRequests);
