@@ -37,7 +37,7 @@ api.post('/dataBucket', upload.array('file'), aut.Auth, requester.uploadData);
 api.post('/folder', aut.Auth, admin.addFolder);
 api.delete("/data", aut.Auth, admin.deleteData);
 api.put("/approveRequest/:folder/:file", admin.approveRequest);
-api.put("/denyRequest/:folder/:file", aut.Auth, admin.denyRequest);
+api.put("/denyRequest/:folder/:file", admin.denyRequest);
 api.get("/data/:folder/:file", aut.Auth, admin.downloadData);
 api.delete('/file/:file', aut.Auth, admin.deletee);
 api.put('/newAdmin/:idReq', aut.Auth, admin.addAdmin);

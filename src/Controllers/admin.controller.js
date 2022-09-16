@@ -488,10 +488,10 @@ const downloadData = (req, res) => {
         Expires: 3600
       }
 
-      sThree.getSignedUrl("getObject", params, (error, dowload) => {
+      sThree.getSignedUrl("getObject", params, (error, download) => {
         if (error) { return res.status(500).send({ error: error }); }
 
-        return res.status(200).send({ dowload });
+        return res.status(200).send({ download });
       })
     });
 };
