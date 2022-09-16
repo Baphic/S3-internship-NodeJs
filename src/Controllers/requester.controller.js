@@ -104,8 +104,8 @@ function listData(req, res) {
   }
 
   temporal.listObjectsV2(paramss3, (error, data) => {
-    if (error) return res.send({ error: error });
-    return res.send({ Data: data.CommonPrefixes });
+    if (error) return res.status(500).send({ message: error });
+    return res.status(200).send({ Data: data.CommonPrefixes });
   });
 }
 
@@ -117,8 +117,8 @@ const listDataTemporal = (req, res) => {
   }
 
   temporal.listObjectsV2(paramss3, (error, data) => {
-    if (error) return res.send({ error: error });
-    return res.send({ Data: data.CommonPrefixes });
+    if (error) return res.status(500).send({ message: error });
+    return res.status(200).send({ Data: data.CommonPrefixes });
   })
 }
 
@@ -131,8 +131,8 @@ const listDataDirectory = (req, res) => {
     Prefix: directory + "/"
   }
   temporal.listObjectsV2(paramss3, (error, data) => {
-    if (error) return res.send({ error: error });
-    return res.send({ Data: data.Contents });
+    if (error) return res.status(500).send({ message: error });
+    return res.status(200).send({ Data: data.Contents });
   })
 }
 
@@ -145,8 +145,8 @@ const listDataDirectoryTemporal = (req, res) => {
     Prefix: parameters.directorio
   }
   temporal.listObjectsV2(paramss3, (error, data) => {
-    if (error) return res.send({ error: error });
-    return res.send({ Data: data.Contents });
+    if (error) res.status(500).send({ message: error });
+    return res.status(200).send({ Data: data.Contents });
   })
 }
 
