@@ -266,12 +266,6 @@ function approveRequest(req, res) {
 
       if (!solApr) return res.status(500).send({ message: "Error al Aceptar" });
 
-      if (UUID.includes("/") == true) {
-        fs.mkdirSync("/" + UUID, { recursive: true });
-      } else if (UUID.includes == false) {
-        fs.mkdirSync(UUID, { recursive: true });
-      }
-
       let name;
       if (folder != null) {
         name = folder + "/" + solApr.name;
