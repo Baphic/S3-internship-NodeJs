@@ -325,7 +325,7 @@ function reuploadPrincipalDelete(file, path, res) {
     if (error) res.status(500).send({ message: "Error en la petición3" });
     if (!dataDelete) res.status(500).send({ message: "No se subio nada" });
 
-    return res.status(200).send({ message: "Funcionamiento exitoso" });
+    return { conclusion: "funciona" };
   });
 }
 
@@ -430,7 +430,7 @@ function addFolder(req, res) {
 
   temporal.putObject(Object, (error, fol) => {
     if (error) return res.status(500).send({ message: error });
-    return res.status(200).send({ message: "Directorio creado correctamente" });
+    return res.status(200).send({ folder: "Directorio creado correctamente" });
   });
 }
 
@@ -459,7 +459,7 @@ const downloadData = (req, res) => {
       sThree.getSignedUrl("getObject", params, (error, download) => {
         if (error) { return res.status(500).send({ message: error }); }
 
-        return res.status(200).send({ message: download });
+        return res.status(200).send({ download: download });
 
       })
     });
