@@ -2,7 +2,7 @@ const express = require('express');
 const requester = require('../Controllers/requester.controller');
 const admin = require('../Controllers/admin.controller');
 const multer = require("multer");
-const aut = require('../Middleware/autentificacion');
+const aut = require('../Middlewares/autentificacion');
 
 var api = express.Router();
 
